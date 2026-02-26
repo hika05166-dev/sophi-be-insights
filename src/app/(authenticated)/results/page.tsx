@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Suspense } from 'react'
 import { Sparkles, Users, TrendingUp, MessageCircle } from 'lucide-react'
 import SearchBar from '@/components/ui/SearchBar'
 import GroupingSummary from '@/components/ui/GroupingSummary'
@@ -10,7 +9,6 @@ import UserAttributeFilter from '@/components/ui/UserAttributeFilter'
 import UtteranceTable from '@/components/ui/UtteranceTable'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 import type { Utterance, Group } from '@/types'
 
 type FilterType = 'all' | 'detailed' | 'self_solving'
@@ -59,7 +57,13 @@ function ResultsContent() {
     finally { setIsLoadingGroups(false) }
   }, [keyword])
 
-  useEffect(() => { setCurrentPage(1); setSelectedIds(new Set()); fetchUtterances(1); fetchGroups() }, [keyword, activeFilter])
+  useEffect(() => {
+    setCurrentPage(1)
+    setSelectedIds(new Set())
+    fetchUtterances(1)
+    fetchGroups()
+  }, [keyword, activeFilter])
+
   useEffect(() => { setCurrentPage(1); setSelectedIds(new Set()); fetchUtterances(1) }, [activeGroupIdsStr])
   useEffect(() => { fetchUtterances(currentPage) }, [currentPage])
 
@@ -102,7 +106,6 @@ function ResultsContent() {
             </Button>
           </div>
 
-          {/* ユーザー属性統計 */}
           {utterances.length > 0 && (
             <Card className="mb-5">
               <CardContent className="p-4">
@@ -131,13 +134,11 @@ function ResultsContent() {
                     </div>
                   ))}
                 </div>
-                {utterances.length > 0 && (
-                  <div className="mt-3 flex h-1.5 rounded-full overflow-hidden gap-0.5">
-                    {attrStats.detailed > 0 && <div className="rounded-full bg-destructive" style={{ width: `${attrStats.detailed / utterances.length * 100}%` }} />}
-                    {attrStats.self_solving > 0 && <div className="rounded-full bg-primary/60" style={{ width: `${attrStats.self_solving / utterances.length * 100}%` }} />}
-                    {attrStats.none > 0 && <div className="rounded-full bg-muted" style={{ width: `${attrStats.none / utterances.length * 100}%` }} />}
-                  </div>
-                )}
+                <div className="mt-3 flex h-1.5 rounded-full overflow-hidden gap-0.5">
+                  {attrStats.detailed > 0 && <div className="rounded-full bg-destructive" style={{ width: `${attrStats.detailed / utterances.length * 100}%` }} />}
+                  {attrStats.self_solving > 0 && <div className="rounded-full bg-primary/60" style={{ width: `${attrStats.self_solving / utterances.length * 100}%` }} />}
+                  {attrStats.none > 0 && <div className="rounded-full bg-muted" style={{ width: `${attrStats.none / utterances.length * 100}%` }} />}
+                </div>
               </CardContent>
             </Card>
           )}
