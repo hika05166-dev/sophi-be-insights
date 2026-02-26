@@ -1,49 +1,38 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: ['class'],
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    container: { center: true, padding: '2rem', screens: { '2xl': '1400px' } },
     extend: {
       colors: {
-        sophi: {
-          pink: {
-            50: '#fff0f5',
-            100: '#ffe0ec',
-            200: '#ffc2d8',
-            300: '#ff94b8',
-            400: '#ff5a8e',
-            500: '#ff2d6f',
-            600: '#e8005a',
-            700: '#c4004d',
-            800: '#a30043',
-            900: '#87003c',
-          },
-          purple: {
-            50: '#f5f0ff',
-            100: '#ede0ff',
-            200: '#d8c2ff',
-            300: '#bc94ff',
-            400: '#9d5aff',
-            500: '#8b2dff',
-            600: '#7700e8',
-            700: '#6200c4',
-            800: '#5200a3',
-            900: '#440087',
-          },
-          rose: '#ff6b9d',
-          lavender: '#c084fc',
-        },
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+        secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+        destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+        muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+        accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+        card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+        popover: { DEFAULT: 'hsl(var(--popover))', foreground: 'hsl(var(--popover-foreground))' },
       },
-      backgroundImage: {
-        'sophi-gradient': 'linear-gradient(135deg, #fff0f5 0%, #f5f0ff 100%)',
-        'sophi-hero': 'linear-gradient(135deg, #ff6b9d22 0%, #c084fc22 100%)',
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
       },
-      fontFamily: {
-        sans: ['Noto Sans JP', 'sans-serif'],
+      fontFamily: { sans: ['Noto Sans JP', 'sans-serif'] },
+      keyframes: {
+        'fade-in': { from: { opacity: '0', transform: 'translateY(6px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
       },
+      animation: { 'fade-in': 'fade-in 0.2s ease-out forwards' },
     },
   },
   plugins: [],
