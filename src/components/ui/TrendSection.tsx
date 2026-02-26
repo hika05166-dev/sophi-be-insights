@@ -68,8 +68,6 @@ function TrendList({
       {/* ランキングリスト */}
       <div className="mt-4 space-y-2">
         {topics.slice(0, 5).map((topic, i) => {
-          const maxCount = topics[0]?.count || 1
-          const pct = Math.round((topic.count / maxCount) * 100)
           return (
             <button
               key={topic.keyword + i}
@@ -87,15 +85,6 @@ function TrendList({
                   </span>
                 </div>
                 <span className="text-xs text-gray-400">{topic.count}件</span>
-              </div>
-              <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{
-                    width: `${pct}%`,
-                    background: 'linear-gradient(90deg, #ff6b9d, #c084fc)',
-                  }}
-                />
               </div>
             </button>
           )
