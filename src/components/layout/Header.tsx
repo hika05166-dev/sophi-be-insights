@@ -5,12 +5,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { LogOut, Menu, X, Home, Search, BarChart2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface HeaderProps {
-  user?: {
-    name?: string | null
-    email?: string | null
-  } | null
+  user?: { name?: string | null; email?: string | null } | null
 }
 
 const NAV_ITEMS = [
@@ -24,40 +23,26 @@ export default function Header({ user }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <header className="bg-white border-b border-pink-100 sticky top-0 z-30">
+    <header className="bg-card border-b sticky top-0 z-30">
       <div className="flex items-center justify-between px-4 h-14">
-        {/* モバイル: ロゴ + ハンバーガー */}
         <div className="flex items-center gap-3 md:hidden">
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="p-2 rounded-lg text-gray-600 hover:bg-pink-50"
-          >
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-          <span className="font-bold text-gray-800 text-sm">Insight Lens</span>
+          <Button variant="ghost" size="icon" onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <X size={18} /> : <Menu size={18} />}
+          </Button>
+          <span className="font-semibold text-foreground text-sm">Insight Lens</span>
         </div>
-
-        {/* デスクトップ: ページタイトル */}
         <div className="hidden md:block" />
-
-        {/* ユーザー情報 + ログアウト */}
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500 hidden sm:inline">
-            {user?.name || user?.email}
-          </span>
-          <button
-            onClick={() => signOut({ callbackUrl: '/login' })}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-500 transition-colors px-2 py-1 rounded-lg hover:bg-red-50"
-          >
-            <LogOut size={15} />
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground hidden sm:inline">{user?.name || user?.email}</span>
+          <Button variant="ghost" size="sm" onClick={() => signOut({ callbackUrl: '/login' })} className="text-muted-foreground">
+            <LogOut size={14} className="mr-1" />
             <span className="hidden sm:inline">ログアウト</span>
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* モバイルメニュー */}
       {menuOpen && (
-        <div className="md:hidden border-t border-pink-50 bg-white px-3 py-2 space-y-1">
+        <div className="md:hidden border-t bg-card px-2 py-2 space-y-0.5">
           {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
             const isActive = pathname === href
             return (
@@ -65,12 +50,12 @@ export default function Header({ user }: HeaderProps) {
                 key={href}
                 href={href}
                 onClick={() => setMenuOpen(false)}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  isActive ? 'text-white' : 'text-gray-600 hover:bg-pink-50'
-                }`}
-                style={isActive ? { background: 'linear-gradient(135deg, #ff6b9d, #c084fc)' } : {}}
+                className={cn(
+                  'flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                  isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'
+                )}
               >
-                <Icon size={16} />
+                <Icon size={15} />
                 {label}
               </Link>
             )

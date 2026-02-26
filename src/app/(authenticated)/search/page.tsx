@@ -4,12 +4,11 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import SearchBar from '@/components/ui/SearchBar'
 import TrendSection from '@/components/ui/TrendSection'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { TrendTopic } from '@/types'
 
-interface TrendsData {
-  userTrends: TrendTopic[]
-  searchTrends: TrendTopic[]
-}
+interface TrendsData { userTrends: TrendTopic[]; searchTrends: TrendTopic[] }
 
 export default function SearchPage() {
   const router = useRouter()
@@ -17,78 +16,43 @@ export default function SearchPage() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/trends')
-      .then(r => r.json())
-      .then(data => setTrends(data))
-      .catch(console.error)
-      .finally(() => setIsLoading(false))
+    fetch('/api/trends').then(r => r.json()).then(setTrends).catch(console.error).finally(() => setIsLoading(false))
   }, [])
 
   const handleSearch = (keyword: string) => {
-    if (keyword.trim()) {
-      router.push(`/results?q=${encodeURIComponent(keyword.trim())}`)
-    }
+    if (keyword.trim()) router.push(`/results?q=${encodeURIComponent(keyword.trim())}`)
   }
 
   return (
-    <div className="min-h-full" style={{ background: 'linear-gradient(160deg, #fff0f5 0%, #f5f0ff 60%, #f0f4ff 100%)' }}>
-      {/* ヒーローセクション */}
-      <div className="flex flex-col items-center justify-center px-6 pt-24 pb-16">
+    <div className="min-h-full bg-background">
+      <div className="flex flex-col items-center justify-center px-6 pt-20 pb-12">
         <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-4xl font-bold mb-3"
-            style={{ background: 'linear-gradient(135deg, #ff6b9d, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            びい インサイト
-          </h1>
-          <p className="text-gray-500 text-lg">
-            ユーザーの声から、次の一手を見つけよう
-          </p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Insight Lens</h1>
+          <p className="text-muted-foreground">ユーザーの声から、次の一手を見つけよう</p>
         </div>
 
-        {/* 検索バー */}
         <div className="w-full max-w-2xl animate-fade-in">
           <SearchBar onSearch={handleSearch} autoFocus />
         </div>
 
-        {/* ヒント */}
         <div className="mt-4 flex flex-wrap gap-2 justify-center animate-fade-in">
           {['生理痛', 'PMS', '妊活', '睡眠', '経血量', 'ストレス'].map(kw => (
-            <button
-              key={kw}
-              onClick={() => handleSearch(kw)}
-              className="px-3 py-1 rounded-full text-sm border transition-all hover:shadow-sm"
-              style={{
-                borderColor: '#ffc2d8',
-                color: '#ff6b9d',
-                backgroundColor: 'rgba(255, 194, 216, 0.15)',
-              }}
-              onMouseEnter={e => {
-                (e.target as HTMLElement).style.backgroundColor = 'rgba(255, 107, 157, 0.1)'
-              }}
-              onMouseLeave={e => {
-                (e.target as HTMLElement).style.backgroundColor = 'rgba(255, 194, 216, 0.15)'
-              }}
-            >
+            <Button key={kw} variant="outline" size="sm" onClick={() => handleSearch(kw)}>
               {kw}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
 
-      {/* トレンドセクション */}
       <div className="max-w-5xl mx-auto px-6 pb-16">
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="loading-spinner" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[1, 2].map(i => <Skeleton key={i} className="h-64 w-full" />)}
           </div>
         ) : trends ? (
-          <TrendSection
-            userTrends={trends.userTrends}
-            searchTrends={trends.searchTrends}
-            onKeywordClick={handleSearch}
-          />
+          <TrendSection userTrends={trends.userTrends} searchTrends={trends.searchTrends} onKeywordClick={handleSearch} />
         ) : null}
       </div>
-
     </div>
   )
 }

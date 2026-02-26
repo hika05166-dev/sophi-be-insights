@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Search, X } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 interface SearchBarProps {
   defaultValue?: string
@@ -19,68 +21,37 @@ export default function SearchBar({
   const [value, setValue] = useState(defaultValue)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    setValue(defaultValue)
-  }, [defaultValue])
-
-  useEffect(() => {
-    if (autoFocus && inputRef.current) {
-      inputRef.current.focus()
-    }
-  }, [autoFocus])
+  useEffect(() => { setValue(defaultValue) }, [defaultValue])
+  useEffect(() => { if (autoFocus) inputRef.current?.focus() }, [autoFocus])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (value.trim()) {
-      onSearch(value.trim())
-    }
-  }
-
-  const handleClear = () => {
-    setValue('')
-    inputRef.current?.focus()
+    if (value.trim()) onSearch(value.trim())
   }
 
   return (
-    <form onSubmit={handleSubmit} className="relative group">
-      <div className="relative flex items-center">
-        <Search
-          size={20}
-          className="absolute left-4 text-gray-400 pointer-events-none transition-colors group-focus-within:text-pink-400"
-        />
-        <input
+    <form onSubmit={handleSubmit} className="flex items-center gap-2">
+      <div className="relative flex-1">
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+        <Input
           ref={inputRef}
           type="text"
           value={value}
           onChange={e => setValue(e.target.value)}
           placeholder={placeholder}
-          className="w-full pl-11 pr-24 py-4 rounded-2xl text-gray-800 text-base bg-white
-            border-2 border-pink-100
-            focus:outline-none focus:border-pink-300 focus:shadow-lg
-            transition-all placeholder-gray-400"
-          style={{
-            boxShadow: '0 4px 20px rgba(255, 107, 157, 0.08)',
-          }}
+          className="pl-9 pr-8 h-11"
         />
-        <div className="absolute right-2 flex items-center gap-1">
-          {value && (
-            <button
-              type="button"
-              onClick={handleClear}
-              className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-all"
-            >
-              <X size={16} />
-            </button>
-          )}
+        {value && (
           <button
-            type="submit"
-            className="px-4 py-2 rounded-xl font-medium text-white text-sm transition-all"
-            style={{ background: 'linear-gradient(135deg, #ff6b9d, #c084fc)' }}
+            type="button"
+            onClick={() => { setValue(''); inputRef.current?.focus() }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
-            検索
+            <X size={14} />
           </button>
-        </div>
+        )}
       </div>
+      <Button type="submit">検索</Button>
     </form>
   )
 }
