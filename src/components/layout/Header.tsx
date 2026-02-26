@@ -34,7 +34,7 @@ export default function Header({ user }: HeaderProps) {
           >
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
-          <span className="font-bold text-gray-800 text-sm">インサイトツール</span>
+          <span className="font-bold text-gray-800 text-sm">Insight Lens</span>
         </div>
 
         {/* デスクトップ: ページタイトル */}

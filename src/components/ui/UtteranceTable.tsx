@@ -72,18 +72,8 @@ export default function UtteranceTable({
   const selectable = selectedIds !== undefined && onSelectionChange !== undefined
 
   const handleRowClick = (utterance: Utterance) => {
-    if (selectable) {
-      const next = new Set(selectedIds)
-      if (next.has(utterance.id)) {
-        next.delete(utterance.id)
-      } else {
-        next.add(utterance.id)
-      }
-      onSelectionChange!(next)
-    } else {
-      const q = searchParams.get('q') || keyword
-      router.push(`/users/${utterance.anonymous_id}?from=results&q=${encodeURIComponent(q)}`)
-    }
+    const q = searchParams.get('q') || keyword
+    router.push(`/users/${utterance.anonymous_id}?from=results&q=${encodeURIComponent(q)}`)
   }
 
   const handleCheckboxClick = (e: React.MouseEvent, utterance: Utterance) => {

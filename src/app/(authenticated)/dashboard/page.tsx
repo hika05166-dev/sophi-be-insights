@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
 import SearchBar from '@/components/ui/SearchBar'
 import DonutChart from '@/components/charts/DonutChart'
 import HeatmapChart from '@/components/charts/HeatmapChart'
@@ -35,6 +36,15 @@ function DashboardContent() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-6">
+        {keyword && (
+          <button
+            onClick={() => router.push(`/results?q=${encodeURIComponent(keyword)}`)}
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4 transition-colors"
+          >
+            <ArrowLeft size={15} />
+            検索結果に戻る
+          </button>
+        )}
         <h1 className="text-xl font-bold text-gray-800 mb-4">キーワード分析ダッシュボード</h1>
         <SearchBar defaultValue={keyword} onSearch={handleSearch} placeholder="分析したいキーワードを入力..." />
       </div>

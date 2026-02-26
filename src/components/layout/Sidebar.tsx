@@ -17,12 +17,17 @@ export default function Sidebar() {
       {/* ロゴ */}
       <div className="px-4 py-5 border-b border-pink-50">
         <Link href="/search" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
             style={{ background: 'linear-gradient(135deg, #ff6b9d, #c084fc)' }}>
-            <span className="text-white text-sm font-bold">び</span>
+            {/* レンズアイコン */}
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="8" cy="8" r="5.5" stroke="white" strokeWidth="1.8"/>
+              <circle cx="8" cy="8" r="2.5" stroke="white" strokeWidth="1.4" strokeDasharray="2 1.5"/>
+              <line x1="12" y1="12" x2="16" y2="16" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-800 leading-tight">インサイト</p>
+            <p className="text-sm font-bold text-gray-800 leading-tight">Insight Lens</p>
             <p className="text-xs text-gray-400 leading-tight">ソフィBe</p>
           </div>
         </Link>
