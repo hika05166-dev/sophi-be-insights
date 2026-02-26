@@ -62,6 +62,12 @@ function ResultsContent() {
     setSelectedIds(new Set())
     fetchUtterances(1)
     fetchGroups()
+    if (keyword) {
+      const stored = JSON.parse(localStorage.getItem('il_search_history') || '[]') as string[]
+      const updated = [keyword, ...stored.filter(k => k !== keyword)].slice(0, 15)
+      localStorage.setItem('il_search_history', JSON.stringify(updated))
+      window.dispatchEvent(new Event('il_history_updated'))
+    }
   }, [keyword, activeFilter])
 
   useEffect(() => { setCurrentPage(1); setSelectedIds(new Set()); fetchUtterances(1) }, [activeGroupIdsStr])
