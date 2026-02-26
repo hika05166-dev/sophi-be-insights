@@ -89,21 +89,6 @@ export default function SearchPage() {
         ) : null}
       </div>
 
-      {/* 波形デコレーション */}
-      <div className="fixed bottom-0 left-0 right-0 pointer-events-none overflow-hidden h-40 opacity-20">
-        <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-full">
-          <path
-            d="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z"
-            fill="url(#waveGradient)"
-          />
-          <defs>
-            <linearGradient id="waveGradient" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#ff6b9d" />
-              <stop offset="100%" stopColor="#c084fc" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
     </div>
   )
 }
