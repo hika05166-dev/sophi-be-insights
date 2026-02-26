@@ -39,7 +39,7 @@ export default function SearchBar({
           value={value}
           onChange={e => setValue(e.target.value)}
           placeholder={placeholder}
-          className="pl-9 pr-8 h-11"
+          className="pl-9 pr-8 h-11 bg-card"
         />
         {value && (
           <button
@@ -51,7 +51,7 @@ export default function SearchBar({
           </button>
         )}
       </div>
-      <Button type="submit">検索</Button>
+      <Button type="submit" className="h-11 px-5">検索</Button>
     </form>
   )
 }
