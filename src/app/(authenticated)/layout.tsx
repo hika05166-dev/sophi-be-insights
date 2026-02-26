@@ -22,12 +22,8 @@ export default function AuthenticatedLayout({
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center"
-        style={{ background: 'linear-gradient(135deg, #fff0f5 0%, #f5f0ff 100%)' }}>
-        <div className="text-center">
-          <div className="loading-spinner mx-auto mb-4" />
-          <p className="text-gray-500 text-sm">読み込み中...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="loading-spinner" />
       </div>
     )
   }
@@ -37,7 +33,7 @@ export default function AuthenticatedLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header user={session.user} />
