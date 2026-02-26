@@ -64,32 +64,6 @@ function TrendList({
           )
         })}
       </div>
-
-      {/* ランキングリスト */}
-      <div className="mt-4 space-y-2">
-        {topics.slice(0, 5).map((topic, i) => {
-          return (
-            <button
-              key={topic.keyword + i}
-              onClick={() => onKeywordClick(topic.keyword)}
-              className="w-full text-left hover:bg-pink-50 rounded-xl px-3 py-2 transition-all group"
-            >
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold w-5 text-center rounded-full"
-                    style={{ color: i < 3 ? '#ff6b9d' : '#9ca3af' }}>
-                    {i + 1}
-                  </span>
-                  <span className="text-sm font-medium text-gray-700 group-hover:text-pink-600 transition-colors">
-                    {topic.keyword}
-                  </span>
-                </div>
-                <span className="text-xs text-gray-400">{topic.count}件</span>
-              </div>
-            </button>
-          )
-        })}
-      </div>
     </div>
   )
 }
