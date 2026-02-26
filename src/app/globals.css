@@ -26,7 +26,7 @@
     --border: 42 8% 87%;             /* subtle warm border */
     --input: 42 8% 87%;
     --ring: 30 6% 11%;
-    --radius: 0.625rem;              /* 10px */
+    --radius: 1rem;                  /* 16px — scale: sm=8 md=12 lg=16 xl=24 */
     --sidebar: 42 10% 92%;           /* slightly darker sidebar */
   }
 }
