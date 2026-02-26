@@ -6,6 +6,8 @@ import type { ChatSession } from '@/types'
 
 interface ChatHistoryProps {
   session: ChatSession
+  isSelected: boolean
+  onToggle: (sessionId: string) => void
 }
 
 function formatDate(dateStr: string) {
@@ -18,40 +20,59 @@ function formatDate(dateStr: string) {
   })
 }
 
-export default function ChatHistory({ session }: ChatHistoryProps) {
+export default function ChatHistory({ session, isSelected, onToggle }: ChatHistoryProps) {
   const [isExpanded, setIsExpanded] = useState(true)
 
   const userMessages = session.messages.filter(m => m.role === 'user')
   const firstUserMessage = userMessages[0]?.content || ''
 
   return (
-    <div className="p-4">
+    <div className={`p-4 transition-colors ${isSelected ? 'bg-pink-50/50' : ''}`}>
       {/* セッションヘッダー */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between text-left mb-3 group"
-      >
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-medium text-gray-400">
-              {formatDate(session.created_at)}
-            </span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-pink-50 text-pink-500">
-              {session.messages.length}件
-            </span>
-          </div>
-          {!isExpanded && (
-            <p className="text-sm text-gray-600 line-clamp-1 pr-4">{firstUserMessage}</p>
+      <div className="flex items-start gap-2 mb-3">
+        {/* チェックボックス */}
+        <button
+          onClick={() => onToggle(session.session_id)}
+          className="shrink-0 mt-0.5 w-4 h-4 rounded border-2 flex items-center justify-center transition-all"
+          style={{
+            borderColor: isSelected ? '#ff6b9d' : '#d1d5db',
+            background: isSelected ? 'linear-gradient(135deg, #ff6b9d, #c084fc)' : 'white',
+          }}
+          aria-label="セッションを選択"
+        >
+          {isSelected && (
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+              <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           )}
-        </div>
-        <div className="text-gray-400 group-hover:text-pink-400 transition-colors shrink-0">
-          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </div>
-      </button>
+        </button>
+
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex-1 flex items-center justify-between text-left group"
+        >
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-medium text-gray-400">
+                {formatDate(session.created_at)}
+              </span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-pink-50 text-pink-500">
+                {session.messages.length}件
+              </span>
+            </div>
+            {!isExpanded && (
+              <p className="text-sm text-gray-600 line-clamp-1 pr-4">{firstUserMessage}</p>
+            )}
+          </div>
+          <div className="text-gray-400 group-hover:text-pink-400 transition-colors shrink-0">
+            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </div>
+        </button>
+      </div>
 
       {/* メッセージ一覧 */}
       {isExpanded && (
-        <div className="space-y-3 animate-fade-in">
+        <div className="space-y-3 animate-fade-in pl-6">
           {session.messages.map((msg, i) => {
             const isUser = msg.role === 'user'
             return (

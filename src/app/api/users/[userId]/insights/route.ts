@@ -41,6 +41,8 @@ export async function POST(
     const db = getDb()
 
     const { userId } = params
+    const body = await request.json().catch(() => ({}))
+    const sessionIds: string[] | undefined = body.sessionIds
 
     // ユーザー情報取得
     const user = db.prepare(
@@ -51,12 +53,22 @@ export async function POST(
       return NextResponse.json({ error: 'ユーザーが見つかりません' }, { status: 404 })
     }
 
-    // 会話履歴取得
-    const utterances = db.prepare(
-      `SELECT role, content, created_at FROM utterances
-       WHERE user_id = ?
-       ORDER BY created_at ASC`
-    ).all(user.id) as { role: string; content: string; created_at: string }[]
+    // 会話履歴取得（sessionIds指定時はフィルタリング）
+    let utterances: { role: string; content: string; created_at: string }[]
+    if (sessionIds && sessionIds.length > 0) {
+      const placeholders = sessionIds.map(() => '?').join(', ')
+      utterances = db.prepare(
+        `SELECT role, content, created_at FROM utterances
+         WHERE user_id = ? AND session_id IN (${placeholders})
+         ORDER BY created_at ASC`
+      ).all(user.id, ...sessionIds) as { role: string; content: string; created_at: string }[]
+    } else {
+      utterances = db.prepare(
+        `SELECT role, content, created_at FROM utterances
+         WHERE user_id = ?
+         ORDER BY created_at ASC`
+      ).all(user.id) as { role: string; content: string; created_at: string }[]
+    }
 
     const client = getAnthropicClient()
     if (!client) {
@@ -73,7 +85,11 @@ export async function POST(
 モード: ${user.mode}
 現在の生理周期フェーズ: ${user.cycle_phase}`
 
-    const prompt = `以下のユーザープロフィールとびい（AIチャット）との会話履歴を分析し、商品開発やサービス改善に役立つインサイトを生成してください。
+    const sessionNote = sessionIds && sessionIds.length > 0
+      ? `（選択された${sessionIds.length}セッションの会話）`
+      : '（全セッションの会話）'
+
+    const prompt = `以下のユーザープロフィールとびい（AIチャット）との会話履歴${sessionNote}を分析し、商品開発やサービス改善に役立つインサイトを生成してください。
 
 【ユーザープロフィール】
 ${userProfile}

@@ -219,6 +219,16 @@ function executeSelect(sql: string, params: any[]): any[] {
       .map(([keyword, count]) => ({ keyword, count }))
   }
 
+  // SELECT role, content, created_at FROM utterances WHERE user_id = ? AND session_id IN (...)
+  if (/SELECT role, content, created_at FROM utterances\s+WHERE user_id = \? AND session_id IN/i.test(s)) {
+    const userId = params[0] as number
+    const sessionIds = params.slice(1) as string[]
+    return store.utterances
+      .filter(u => u.user_id === userId && sessionIds.includes(u.session_id))
+      .sort((a, b) => a.created_at.localeCompare(b.created_at))
+      .map(u => ({ role: u.role, content: u.content, created_at: u.created_at }))
+  }
+
   // SELECT role, content, created_at FROM utterances WHERE user_id = ? ORDER BY created_at ASC
   if (/SELECT role, content, created_at FROM utterances\s+WHERE user_id = \?/i.test(s)) {
     const userId = params[0] as number

@@ -13,7 +13,7 @@ export default function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="hidden md:flex flex-col w-56 shrink-0 bg-white border-r border-pink-100 min-h-screen">
+    <aside className="hidden md:flex flex-col w-56 shrink-0 bg-white border-r border-pink-100 h-screen sticky top-0">
       {/* ロゴ */}
       <div className="px-4 py-5 border-b border-pink-50">
         <Link href="/search" className="flex items-center gap-2">

@@ -23,6 +23,7 @@ export default function UserDetailPage() {
 
   const [user, setUser] = useState<UserData | null>(null)
   const [sessions, setSessions] = useState<ChatSession[]>([])
+  const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set())
   const [insight, setInsight] = useState<Insight | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isGeneratingInsight, setIsGeneratingInsight] = useState(false)
@@ -37,19 +38,47 @@ export default function UserDetailPage() {
           setError(data.error)
         } else {
           setUser(data.user)
-          setSessions(data.sessions || [])
+          const fetchedSessions: ChatSession[] = data.sessions || []
+          setSessions(fetchedSessions)
+          // デフォルト全選択
+          setSelectedSessions(new Set(fetchedSessions.map(s => s.session_id)))
         }
       })
       .catch(() => setError('データの取得に失敗しました'))
       .finally(() => setIsLoading(false))
   }, [userId])
 
+  const toggleSession = (sessionId: string) => {
+    setSelectedSessions(prev => {
+      const next = new Set(prev)
+      if (next.has(sessionId)) {
+        next.delete(sessionId)
+      } else {
+        next.add(sessionId)
+      }
+      return next
+    })
+  }
+
+  const toggleAllSessions = () => {
+    if (selectedSessions.size === sessions.length) {
+      setSelectedSessions(new Set())
+    } else {
+      setSelectedSessions(new Set(sessions.map(s => s.session_id)))
+    }
+  }
+
   const generateInsight = async () => {
     setIsGeneratingInsight(true)
     try {
+      const sessionIds = selectedSessions.size > 0
+        ? Array.from(selectedSessions)
+        : sessions.map(s => s.session_id)
+
       const res = await fetch(`/api/users/${userId}/insights`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionIds }),
       })
       const data = await res.json()
       setInsight(data.insights)
@@ -79,6 +108,9 @@ export default function UserDetailPage() {
       </div>
     )
   }
+
+  const allSelected = selectedSessions.size === sessions.length
+  const someSelected = selectedSessions.size > 0 && selectedSessions.size < sessions.length
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -116,7 +148,7 @@ export default function UserDetailPage() {
 
           <button
             onClick={generateInsight}
-            disabled={isGeneratingInsight}
+            disabled={isGeneratingInsight || selectedSessions.size === 0}
             className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all disabled:opacity-50"
             style={{
               background: 'linear-gradient(135deg, #ff6b9d, #c084fc)',
@@ -132,7 +164,9 @@ export default function UserDetailPage() {
             ) : (
               <>
                 <Sparkles size={16} />
-                インサイトを生成
+                {selectedSessions.size > 0
+                  ? `${selectedSessions.size}件のセッションからインサイトを生成`
+                  : 'セッションを選択してください'}
               </>
             )}
           </button>
@@ -143,14 +177,43 @@ export default function UserDetailPage() {
         {/* チャット履歴 */}
         <div className="lg:col-span-3">
           <div className="bg-white rounded-2xl shadow-sm border border-pink-100 overflow-hidden">
-            <div className="px-4 py-3 border-b border-pink-50">
+            <div className="px-4 py-3 border-b border-pink-50 flex items-center justify-between">
               <h2 className="font-semibold text-gray-700 text-sm">
                 チャット履歴 ({sessions.length}セッション)
               </h2>
+              {sessions.length > 1 && (
+                <button
+                  onClick={toggleAllSessions}
+                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-pink-500 transition-colors"
+                >
+                  <div
+                    className="w-3.5 h-3.5 rounded border-2 flex items-center justify-center transition-all"
+                    style={{
+                      borderColor: allSelected || someSelected ? '#ff6b9d' : '#d1d5db',
+                      background: allSelected ? 'linear-gradient(135deg, #ff6b9d, #c084fc)' : 'white',
+                    }}
+                  >
+                    {allSelected && (
+                      <svg width="8" height="6" viewBox="0 0 10 8" fill="none">
+                        <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                    {someSelected && (
+                      <div className="w-1.5 h-0.5 rounded-full" style={{ background: '#ff6b9d' }} />
+                    )}
+                  </div>
+                  {allSelected ? 'すべて解除' : 'すべて選択'}
+                </button>
+              )}
             </div>
             <div className="divide-y divide-pink-50 max-h-[70vh] overflow-y-auto">
               {sessions.map(session => (
-                <ChatHistory key={session.session_id} session={session} />
+                <ChatHistory
+                  key={session.session_id}
+                  session={session}
+                  isSelected={selectedSessions.has(session.session_id)}
+                  onToggle={toggleSession}
+                />
               ))}
               {sessions.length === 0 && (
                 <div className="p-8 text-center text-gray-400 text-sm">
