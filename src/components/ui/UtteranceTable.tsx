@@ -12,6 +12,8 @@ interface UtteranceTableProps {
   limit: number
   onPageChange: (page: number) => void
   keyword: string
+  selectedIds?: Set<number>
+  onSelectionChange?: (ids: Set<number>) => void
 }
 
 function highlightKeyword(text: string, keyword: string): React.ReactNode {
@@ -60,14 +62,49 @@ export default function UtteranceTable({
   limit,
   onPageChange,
   keyword,
+  selectedIds,
+  onSelectionChange,
 }: UtteranceTableProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const totalPages = Math.ceil(total / limit)
 
+  const selectable = selectedIds !== undefined && onSelectionChange !== undefined
+
   const handleRowClick = (utterance: Utterance) => {
-    const q = searchParams.get('q') || keyword
-    router.push(`/users/${utterance.anonymous_id}?from=results&q=${encodeURIComponent(q)}`)
+    if (selectable) {
+      const next = new Set(selectedIds)
+      if (next.has(utterance.id)) {
+        next.delete(utterance.id)
+      } else {
+        next.add(utterance.id)
+      }
+      onSelectionChange!(next)
+    } else {
+      const q = searchParams.get('q') || keyword
+      router.push(`/users/${utterance.anonymous_id}?from=results&q=${encodeURIComponent(q)}`)
+    }
+  }
+
+  const handleCheckboxClick = (e: React.MouseEvent, utterance: Utterance) => {
+    if (!selectable) return
+    e.stopPropagation()
+    const next = new Set(selectedIds)
+    if (next.has(utterance.id)) {
+      next.delete(utterance.id)
+    } else {
+      next.add(utterance.id)
+    }
+    onSelectionChange!(next)
+  }
+
+  const handleSelectAll = () => {
+    if (!selectable) return
+    if (selectedIds!.size === utterances.length) {
+      onSelectionChange!(new Set())
+    } else {
+      onSelectionChange!(new Set(utterances.map(u => u.id)))
+    }
   }
 
   const formatDate = (dateStr: string) => {
@@ -81,10 +118,35 @@ export default function UtteranceTable({
     })
   }
 
+  const allSelected = utterances.length > 0 && selectedIds !== undefined && utterances.every(u => selectedIds.has(u.id))
+  const someSelected = selectedIds !== undefined && selectedIds.size > 0
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-pink-100 overflow-hidden">
       <div className="px-4 py-3 border-b border-pink-50 flex items-center justify-between">
         <div className="flex items-center gap-2">
+          {selectable && (
+            <button
+              onClick={handleSelectAll}
+              className="shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-all"
+              style={{
+                borderColor: allSelected ? '#ff6b9d' : someSelected ? '#ff6b9d' : '#d1d5db',
+                background: allSelected ? 'linear-gradient(135deg, #ff6b9d, #c084fc)' : someSelected ? 'rgba(255, 107, 157, 0.2)' : 'white',
+              }}
+              aria-label="全選択/解除"
+            >
+              {allSelected && (
+                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                  <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+              {someSelected && !allSelected && (
+                <svg width="8" height="2" viewBox="0 0 8 2" fill="none">
+                  <path d="M1 1H7" stroke="#ff6b9d" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              )}
+            </button>
+          )}
           <MessageSquare size={16} style={{ color: '#ff6b9d' }} />
           <h2 className="font-semibold text-gray-700 text-sm">発話一覧</h2>
         </div>
@@ -107,19 +169,38 @@ export default function UtteranceTable({
           <div className="divide-y divide-pink-50">
             {utterances.map(utterance => {
               const badge = utterance.attribute ? ATTRIBUTE_BADGES[utterance.attribute] : null
+              const isSelected = selectedIds?.has(utterance.id) ?? false
               return (
                 <button
                   key={utterance.id}
                   onClick={() => handleRowClick(utterance)}
-                  className="w-full text-left px-4 py-3 hover:bg-pink-50 transition-all group"
+                  className={`w-full text-left px-4 py-3 hover:bg-pink-50 transition-all group ${isSelected ? 'bg-pink-50/50' : ''}`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="shrink-0 mt-0.5">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                        style={{ background: 'linear-gradient(135deg, #ff6b9d, #c084fc)' }}>
-                        {utterance.anonymous_id?.replace('user_', '')}
+                    {selectable && (
+                      <div
+                        className="shrink-0 mt-2 w-4 h-4 rounded border-2 flex items-center justify-center transition-all"
+                        style={{
+                          borderColor: isSelected ? '#ff6b9d' : '#d1d5db',
+                          background: isSelected ? 'linear-gradient(135deg, #ff6b9d, #c084fc)' : 'white',
+                        }}
+                        onClick={(e) => handleCheckboxClick(e, utterance)}
+                      >
+                        {isSelected && (
+                          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                            <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
                       </div>
-                    </div>
+                    )}
+                    {!selectable && (
+                      <div className="shrink-0 mt-0.5">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                          style={{ background: 'linear-gradient(135deg, #ff6b9d, #c084fc)' }}>
+                          {utterance.anonymous_id?.replace('user_', '')}
+                        </div>
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                         <span className="text-xs font-medium text-gray-700">
@@ -149,7 +230,9 @@ export default function UtteranceTable({
                         {formatDate(utterance.created_at)}
                       </p>
                     </div>
-                    <ChevronRight size={16} className="text-gray-300 shrink-0 mt-2 group-hover:text-pink-400 transition-colors" />
+                    {!selectable && (
+                      <ChevronRight size={16} className="text-gray-300 shrink-0 mt-2 group-hover:text-pink-400 transition-colors" />
+                    )}
                   </div>
                 </button>
               )
