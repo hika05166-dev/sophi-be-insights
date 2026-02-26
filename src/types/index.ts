@@ -41,6 +41,7 @@ export interface SearchLog {
 export interface TrendTopic {
   keyword: string
   count: number
+  sample?: string
 }
 
 export interface SearchResult {

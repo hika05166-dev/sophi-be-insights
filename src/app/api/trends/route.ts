@@ -47,7 +47,13 @@ export async function GET() {
     const userTrends = Object.entries(topicCounts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
-      .map(([keyword, count]) => ({ keyword, count }))
+      .map(([keyword, count]) => {
+        const row = db.prepare(
+          "SELECT content FROM utterances WHERE role='user' AND content LIKE ? ORDER BY length(content) DESC LIMIT 1"
+        ).get(`%${keyword}%`) as { content: string } | undefined
+        const sample = row ? row.content.slice(0, 60) + (row.content.length > 60 ? '…' : '') : undefined
+        return { keyword, count, sample }
+      })
 
     // 検索トレンド: search_logsから集計
     const searchTrends = db.prepare(
