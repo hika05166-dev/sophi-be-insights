@@ -5,7 +5,6 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import SearchBar from '@/components/ui/SearchBar'
 import DonutChart from '@/components/charts/DonutChart'
-import HeatmapChart from '@/components/charts/HeatmapChart'
 import HourlyHeatmapChart from '@/components/charts/HourlyHeatmapChart'
 import CrossTabHeatmap from '@/components/charts/CrossTabHeatmap'
 import TrendLineChart from '@/components/charts/TrendLineChart'
@@ -134,18 +133,21 @@ function DashboardContent() {
                     data={getCrossTabData(rowAxis, colAxis, data)}
                     rows={AXIS_VALUES[rowAxis]}
                     cols={AXIS_VALUES[colAxis]}
-                    color="#18181b"
                   />
                 </CardContent>
               </Card>
 
-              {/* 時間帯別ヒートマップ */}
+              {/* 時間帯別 */}
               <Card>
                 <CardHeader>
                   <CardTitle>時間帯別発話数</CardTitle>
                   <CardDescription>「{keyword}」に関する発話が多い時間帯</CardDescription>
                 </CardHeader>
-                <CardContent><HourlyHeatmapChart data={data.hourlyHeatmap} /></CardContent>
+                <CardContent>
+                  <div className="max-w-xs">
+                    <HourlyHeatmapChart data={data.hourlyHeatmap} />
+                  </div>
+                </CardContent>
               </Card>
 
               {/* 共起キーワード */}
@@ -173,15 +175,6 @@ function DashboardContent() {
                   </CardContent>
                 </Card>
               )}
-
-              {/* 生理周期フェーズ × 曜日 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>生理周期フェーズ × 曜日</CardTitle>
-                  <CardDescription>色が濃いほど「{keyword}」に関する発話が多い</CardDescription>
-                </CardHeader>
-                <CardContent><HeatmapChart data={data.heatmap} /></CardContent>
-              </Card>
 
               {/* 月別トレンド */}
               <Card>
