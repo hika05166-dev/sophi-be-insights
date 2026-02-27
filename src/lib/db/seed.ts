@@ -212,7 +212,7 @@ export function seedDatabase(): void {
   )
   const userIds: number[] = []
 
-  for (let i = 1; i <= 50; i++) {
+  for (let i = 1; i <= 300; i++) {
     const anonymous_id = `user_${String(i).padStart(3, '0')}`
     const age_group = randomFrom(AGE_GROUPS)
     // 妊活モードは20代〜40代に多め

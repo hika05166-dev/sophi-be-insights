@@ -22,23 +22,16 @@ const AXIS_VALUES: Record<AxisKey, string[]> = {
   '生理周期': ['月経期', '卵胞期', '排卵期', '黄体期'],
 }
 
-function getCrossTabData(
-  rowAxis: AxisKey,
-  colAxis: AxisKey,
-  data: DashboardData,
-): CrossTabCell[] {
-  const key = [rowAxis, colAxis].sort().join('×') as string
-  let matrix: CrossTabCell[]
-  if (key === '年代×生理周期') matrix = data.agePhaseMatrix
-  else if (key === 'モード×生理周期') matrix = data.modePhaseMatrix
-  else matrix = data.ageModeMatrix
+const swap = (d: CrossTabCell) => ({ row: d.col, col: d.row, count: d.count })
 
-  // rowAxisが「大きい方」の軸でない場合はrow/colを入れ替える
-  const canonical = [rowAxis, colAxis].sort()
-  if (canonical[0] !== rowAxis) {
-    return matrix.map(d => ({ row: d.col, col: d.row, count: d.count }))
-  }
-  return matrix
+function getCrossTabData(rowAxis: AxisKey, colAxis: AxisKey, data: DashboardData): CrossTabCell[] {
+  if (rowAxis === '年代' && colAxis === '生理周期') return data.agePhaseMatrix
+  if (rowAxis === '生理周期' && colAxis === '年代') return data.agePhaseMatrix.map(swap)
+  if (rowAxis === 'モード' && colAxis === '生理周期') return data.modePhaseMatrix
+  if (rowAxis === '生理周期' && colAxis === 'モード') return data.modePhaseMatrix.map(swap)
+  if (rowAxis === '年代' && colAxis === 'モード') return data.ageModeMatrix
+  if (rowAxis === 'モード' && colAxis === '年代') return data.ageModeMatrix.map(swap)
+  return []
 }
 
 function DashboardContent() {
@@ -121,25 +114,17 @@ function DashboardContent() {
                       <select
                         className="border rounded px-2 py-1 text-sm bg-background text-foreground"
                         value={rowAxis}
-                        onChange={e => {
-                          const v = e.target.value as AxisKey
-                          if (v === colAxis) setColAxis(AXES.find(a => a !== v)!)
-                          setRowAxis(v)
-                        }}
+                        onChange={e => setRowAxis(e.target.value as AxisKey)}
                       >
-                        {AXES.map(a => <option key={a} value={a}>{a}</option>)}
+                        {AXES.filter(a => a !== colAxis).map(a => <option key={a} value={a}>{a}</option>)}
                       </select>
                       <span className="text-muted-foreground font-medium">×</span>
                       <select
                         className="border rounded px-2 py-1 text-sm bg-background text-foreground"
                         value={colAxis}
-                        onChange={e => {
-                          const v = e.target.value as AxisKey
-                          if (v === rowAxis) setRowAxis(AXES.find(a => a !== v)!)
-                          setColAxis(v)
-                        }}
+                        onChange={e => setColAxis(e.target.value as AxisKey)}
                       >
-                        {AXES.map(a => <option key={a} value={a}>{a}</option>)}
+                        {AXES.filter(a => a !== rowAxis).map(a => <option key={a} value={a}>{a}</option>)}
                       </select>
                     </div>
                   </div>
@@ -157,8 +142,8 @@ function DashboardContent() {
               {/* 時間帯別ヒートマップ */}
               <Card>
                 <CardHeader>
-                  <CardTitle>時間帯別発話数ヒートマップ</CardTitle>
-                  <CardDescription>「{keyword}」に関する発話が多い時間帯・曜日</CardDescription>
+                  <CardTitle>時間帯別発話数</CardTitle>
+                  <CardDescription>「{keyword}」に関する発話が多い時間帯</CardDescription>
                 </CardHeader>
                 <CardContent><HourlyHeatmapChart data={data.hourlyHeatmap} /></CardContent>
               </Card>
