@@ -56,7 +56,7 @@ export default function ChatHistory({ session, isSelected, onToggle }: ChatHisto
                   </div>
                 )}
                 <div className={`max-w-[80%] rounded-xl px-3 py-2 text-sm leading-relaxed ${
-                  isUser ? 'bg-foreground/10 text-foreground rounded-tr-sm' : 'bg-muted text-foreground rounded-tl-sm'
+                  isUser ? 'bg-white text-foreground rounded-tr-sm' : 'bg-muted text-foreground rounded-tl-sm'
                 }`}>
                   {msg.content}
                 </div>

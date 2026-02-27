@@ -167,7 +167,7 @@ export default function UtteranceTable({
                           <span className="text-[11px] text-muted-foreground">+{relatedMatches.length - 3}</span>
                         )}
                       </div>
-                      <p className="text-sm text-foreground line-clamp-2 leading-relaxed">
+                      <p className="text-sm text-foreground line-clamp-4 leading-relaxed">
                         {highlightText(utterance.content, allHighlightKeywords)}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">{formatDate(utterance.created_at)}</p>
