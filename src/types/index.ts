@@ -114,6 +114,12 @@ export interface CoOccurrenceItem {
   count: number
 }
 
+export interface CrossTabCell {
+  row: string
+  col: string
+  count: number
+}
+
 export interface DashboardData {
   ageGroups: AgeGroupData[]
   modes: ModeData[]
@@ -122,6 +128,8 @@ export interface DashboardData {
   hourlyHeatmap: HourlyHeatmapCell[]
   monthlyTrend: MonthlyTrend[]
   coOccurrence: CoOccurrenceItem[]
+  agePhaseMatrix: CrossTabCell[]
+  modePhaseMatrix: CrossTabCell[]
   keyword: string
   totalCount: number
 }

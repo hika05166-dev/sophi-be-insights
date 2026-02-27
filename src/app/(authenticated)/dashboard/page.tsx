@@ -7,6 +7,7 @@ import SearchBar from '@/components/ui/SearchBar'
 import DonutChart from '@/components/charts/DonutChart'
 import HeatmapChart from '@/components/charts/HeatmapChart'
 import HourlyHeatmapChart from '@/components/charts/HourlyHeatmapChart'
+import CrossTabHeatmap from '@/components/charts/CrossTabHeatmap'
 import TrendLineChart from '@/components/charts/TrendLineChart'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
@@ -79,21 +80,37 @@ function DashboardContent() {
             </div>
           ) : (
             <>
-              {/* ユーザー属性ごとの比較 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <Card>
-                  <CardHeader><CardTitle>年代別構成比</CardTitle></CardHeader>
-                  <CardContent><DonutChart data={data.ageGroups.map(d => ({ name: d.age_group, value: d.count }))} colors={['#18181b', '#52525b', '#a1a1aa', '#d4d4d8']} /></CardContent>
-                </Card>
-                <Card>
-                  <CardHeader><CardTitle>モード別構成比</CardTitle></CardHeader>
-                  <CardContent><DonutChart data={data.modes.map(d => ({ name: d.mode, value: d.count }))} colors={['#18181b', '#71717a']} /></CardContent>
-                </Card>
-                <Card>
-                  <CardHeader><CardTitle>周期フェーズ別構成比</CardTitle></CardHeader>
-                  <CardContent><DonutChart data={data.cyclePhases.map(d => ({ name: d.cycle_phase, value: d.count }))} colors={['#ff6b9d', '#c084fc', '#818cf8', '#f472b6']} /></CardContent>
-                </Card>
-              </div>
+              {/* クロス集計: 年代 × 周期フェーズ */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>年代 × 周期フェーズ クロス集計</CardTitle>
+                  <CardDescription>「{keyword}」に関する発話数を年代・周期フェーズの組み合わせで集計</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <CrossTabHeatmap
+                    data={data.agePhaseMatrix}
+                    rows={['10代', '20代', '30代', '40代〜']}
+                    cols={['月経期', '卵胞期', '排卵期', '黄体期']}
+                    color="#18181b"
+                  />
+                </CardContent>
+              </Card>
+
+              {/* クロス集計: モード × 周期フェーズ */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>モード × 周期フェーズ クロス集計</CardTitle>
+                  <CardDescription>「{keyword}」に関する発話数をモード・周期フェーズの組み合わせで集計</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <CrossTabHeatmap
+                    data={data.modePhaseMatrix}
+                    rows={['生理管理', '妊活']}
+                    cols={['月経期', '卵胞期', '排卵期', '黄体期']}
+                    color="#7c3aed"
+                  />
+                </CardContent>
+              </Card>
 
               {/* 時間帯別ヒートマップ */}
               <Card>

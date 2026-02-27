@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { getDb } from '@/lib/db/index'
 import { initSchema } from '@/lib/db/schema'
 import { seedDatabase } from '@/lib/db/seed'
-import type { AgeGroupData, ModeData, CyclePhaseData, HeatmapCell, HourlyHeatmapCell, MonthlyTrend, CoOccurrenceItem } from '@/types'
+import type { AgeGroupData, ModeData, CyclePhaseData, HeatmapCell, HourlyHeatmapCell, MonthlyTrend, CoOccurrenceItem, CrossTabCell } from '@/types'
 
 function ensureDb() {
   initSchema()
@@ -49,15 +49,9 @@ export async function GET(request: NextRequest) {
 
     if (!keyword.trim()) {
       return NextResponse.json({
-        ageGroups: [],
-        modes: [],
-        cyclePhases: [],
-        heatmap: [],
-        hourlyHeatmap: [],
-        monthlyTrend: [],
-        coOccurrence: [],
-        keyword: '',
-        totalCount: 0,
+        ageGroups: [], modes: [], cyclePhases: [], heatmap: [], hourlyHeatmap: [],
+        monthlyTrend: [], coOccurrence: [], agePhaseMatrix: [], modePhaseMatrix: [],
+        keyword: '', totalCount: 0,
       })
     }
 
@@ -75,15 +69,9 @@ export async function GET(request: NextRequest) {
 
     if (userIds.length === 0) {
       return NextResponse.json({
-        ageGroups: [],
-        modes: [],
-        cyclePhases: [],
-        heatmap: [],
-        hourlyHeatmap: [],
-        monthlyTrend: [],
-        coOccurrence: [],
-        keyword,
-        totalCount: 0,
+        ageGroups: [], modes: [], cyclePhases: [], heatmap: [], hourlyHeatmap: [],
+        monthlyTrend: [], coOccurrence: [], agePhaseMatrix: [], modePhaseMatrix: [],
+        keyword, totalCount: 0,
       })
     }
 
@@ -136,6 +124,24 @@ export async function GET(request: NextRequest) {
         heatmapData.push({ phase, day, count: dayCounts[day] || 0 })
       }
     }
+
+    // 年代 × 周期フェーズ クロス集計
+    const agePhaseRaw = db.prepare(
+      `SELECT u.age_group as row, u.cycle_phase as col, COUNT(*) as count
+       FROM utterances ut
+       JOIN users u ON ut.user_id = u.id
+       WHERE ut.role = 'user' AND ut.content LIKE ?
+       GROUP BY u.age_group, u.cycle_phase`
+    ).all(`%${keyword}%`) as CrossTabCell[]
+
+    // モード × 周期フェーズ クロス集計
+    const modePhaseRaw = db.prepare(
+      `SELECT u.mode as row, u.cycle_phase as col, COUNT(*) as count
+       FROM utterances ut
+       JOIN users u ON ut.user_id = u.id
+       WHERE ut.role = 'user' AND ut.content LIKE ?
+       GROUP BY u.mode, u.cycle_phase`
+    ).all(`%${keyword}%`) as CrossTabCell[]
 
     // 時間帯別ヒートマップ (時間 × 曜日)
     const hourlyRaw = db.prepare(
@@ -190,6 +196,8 @@ export async function GET(request: NextRequest) {
       hourlyHeatmap,
       monthlyTrend: monthlyRows,
       coOccurrence,
+      agePhaseMatrix: agePhaseRaw,
+      modePhaseMatrix: modePhaseRaw,
       keyword,
       totalCount,
     })
