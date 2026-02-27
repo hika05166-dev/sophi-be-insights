@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Sparkles, Users, TrendingUp, MessageCircle } from 'lucide-react'
+import { Sparkles, Users, TrendingUp, MessageCircle, Search } from 'lucide-react'
 import SearchBar from '@/components/ui/SearchBar'
 import GroupingSummary from '@/components/ui/GroupingSummary'
 import UserAttributeFilter from '@/components/ui/UserAttributeFilter'
@@ -13,7 +13,7 @@ import type { Utterance, Group } from '@/types'
 
 type FilterType = 'all' | 'detailed' | 'self_solving'
 type UserAttribute = 'detailed' | 'self_solving' | 'none'
-interface UtteranceWithAttr extends Utterance { attribute?: UserAttribute }
+interface UtteranceWithAttr extends Utterance { attribute?: UserAttribute; matchedQueries?: string[] }
 
 function ResultsContent() {
   const searchParams = useSearchParams()
@@ -26,25 +26,44 @@ function ResultsContent() {
   const [utterances, setUtterances] = useState<UtteranceWithAttr[]>([])
   const [total, setTotal] = useState(0)
   const [groups, setGroups] = useState<Group[]>([])
+  const [relatedQueries, setRelatedQueries] = useState<string[]>([])
   const [isLoadingUtterances, setIsLoadingUtterances] = useState(false)
   const [isLoadingGroups, setIsLoadingGroups] = useState(false)
+  const [isLoadingRelated, setIsLoadingRelated] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const LIMIT = 20
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
 
-  const fetchUtterances = useCallback(async (page = 1) => {
+  const relatedQueriesStr = relatedQueries.join(',')
+
+  const fetchUtterances = useCallback(async (page = 1, related = relatedQueriesStr) => {
     if (!keyword) return
     setIsLoadingUtterances(true)
     try {
       const params = new URLSearchParams({ q: keyword, filter: activeFilter, page: String(page), limit: String(LIMIT) })
       if (activeGroupIds.length > 0) params.set('group_ids', activeGroupIds.join(','))
+      if (related) params.set('related', related)
       const res = await fetch(`/api/utterances?${params}`)
       const data = await res.json()
       setUtterances(data.utterances || [])
       setTotal(data.total || 0)
     } catch (err) { console.error(err) }
     finally { setIsLoadingUtterances(false) }
-  }, [keyword, activeFilter, activeGroupIdsStr])
+  }, [keyword, activeFilter, activeGroupIdsStr, relatedQueriesStr])
+
+  const fetchRelatedQueries = useCallback(async () => {
+    if (!keyword) return
+    setIsLoadingRelated(true)
+    try {
+      const res = await fetch(`/api/related-queries?q=${encodeURIComponent(keyword)}`)
+      const data = await res.json()
+      const queries: string[] = data.queries || []
+      setRelatedQueries(queries)
+      // 関連クエリが取得できたら即座に再検索
+      await fetchUtterances(1, queries.join(','))
+    } catch (err) { console.error(err) }
+    finally { setIsLoadingRelated(false) }
+  }, [keyword])
 
   const fetchGroups = useCallback(async () => {
     if (!keyword) return
@@ -60,7 +79,10 @@ function ResultsContent() {
   useEffect(() => {
     setCurrentPage(1)
     setSelectedIds(new Set())
-    fetchUtterances(1)
+    setRelatedQueries([])
+    // まず元KWで即時検索、その後関連クエリを取得して再検索
+    fetchUtterances(1, '')
+    fetchRelatedQueries()
     fetchGroups()
     if (keyword) {
       const stored = JSON.parse(localStorage.getItem('il_search_history') || '[]') as string[]
@@ -110,6 +132,32 @@ function ResultsContent() {
             <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard?q=${encodeURIComponent(keyword)}`)}>
               📊 キーワード分析
             </Button>
+          </div>
+
+          {/* 関連クエリ表示 */}
+          <div className="mb-4 flex flex-wrap items-center gap-2 min-h-[28px]">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+              <Search size={12} />
+              <span>関連クエリも検索中:</span>
+            </div>
+            {isLoadingRelated ? (
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4].map(i => (
+                  <span key={i} className="h-5 w-16 rounded-md bg-muted animate-pulse inline-block" />
+                ))}
+              </div>
+            ) : relatedQueries.length > 0 ? (
+              relatedQueries.map(q => (
+                <span
+                  key={q}
+                  className="inline-flex items-center text-xs px-2 py-0.5 rounded-md bg-accent text-accent-foreground border border-border/60"
+                >
+                  {q}
+                </span>
+              ))
+            ) : (
+              <span className="text-xs text-muted-foreground italic">生成中...</span>
+            )}
           </div>
 
           {utterances.length > 0 && (
@@ -171,7 +219,8 @@ function ResultsContent() {
               <UtteranceTable
                 utterances={utterances} isLoading={isLoadingUtterances} total={total}
                 currentPage={currentPage} limit={LIMIT} onPageChange={setCurrentPage}
-                keyword={keyword} selectedIds={selectedIds} onSelectionChange={setSelectedIds}
+                keyword={keyword} relatedQueries={relatedQueries}
+                selectedIds={selectedIds} onSelectionChange={setSelectedIds}
               />
             </div>
           </div>
