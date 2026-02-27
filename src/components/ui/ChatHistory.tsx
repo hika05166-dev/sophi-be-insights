@@ -35,7 +35,7 @@ export default function ChatHistory({ session, isSelected, onToggle }: ChatHisto
               <Badge variant="outline">{session.messages.length}件</Badge>
             </div>
             {!isExpanded && (
-              <p className="text-sm text-foreground line-clamp-4 pr-4">{firstUserMessage}</p>
+              <p className="text-sm text-foreground line-clamp-3 pr-4">{firstUserMessage}</p>
             )}
           </div>
           <div className="text-muted-foreground group-hover:text-foreground transition-colors shrink-0">
