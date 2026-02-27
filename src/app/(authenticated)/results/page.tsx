@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Sparkles, Users, TrendingUp, MessageCircle, Search } from 'lucide-react'
+import { Sparkles, Users, TrendingUp, Search } from 'lucide-react'
 import SearchBar from '@/components/ui/SearchBar'
 import GroupingSummary from '@/components/ui/GroupingSummary'
 import UserAttributeFilter from '@/components/ui/UserAttributeFilter'
@@ -111,11 +111,6 @@ function ResultsContent() {
     router.push(`/insights?ids=${Array.from(selectedIds).join(',')}&q=${encodeURIComponent(keyword)}`)
   }
 
-  const attrStats = useMemo(() => {
-    const counts = { detailed: 0, self_solving: 0, none: 0 }
-    utterances.forEach(u => { const a = (u.attribute || 'none') as keyof typeof counts; counts[a]++ })
-    return counts
-  }, [utterances])
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -160,42 +155,6 @@ function ResultsContent() {
             )}
           </div>
 
-          {utterances.length > 0 && (
-            <Card className="mb-5">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Users size={14} className="text-muted-foreground" />
-                  <p className="text-sm font-medium text-foreground">ユーザー属性の分布</p>
-                  <span className="text-xs text-muted-foreground">（このページの{utterances.length}件）</span>
-                </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  {[
-                    { key: 'detailed', label: '深刻な悩み', icon: MessageCircle },
-                    { key: 'self_solving', label: '自己解決型', icon: TrendingUp },
-                    { key: 'none', label: 'その他', icon: Users },
-                  ].map(({ key, label, icon: Icon }) => (
-                    <div key={key} className="flex items-center gap-2 px-3 py-2 rounded-md border bg-background flex-1 min-w-[110px]">
-                      <Icon size={13} className="text-muted-foreground" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">{label}</p>
-                        <p className="text-sm font-semibold text-foreground">
-                          {attrStats[key as keyof typeof attrStats]}件
-                          <span className="ml-1 text-xs font-normal text-muted-foreground">
-                            ({utterances.length > 0 ? Math.round(attrStats[key as keyof typeof attrStats] / utterances.length * 100) : 0}%)
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 flex h-1.5 rounded-full overflow-hidden gap-0.5">
-                  {attrStats.detailed > 0 && <div className="rounded-full bg-destructive" style={{ width: `${attrStats.detailed / utterances.length * 100}%` }} />}
-                  {attrStats.self_solving > 0 && <div className="rounded-full bg-primary/60" style={{ width: `${attrStats.self_solving / utterances.length * 100}%` }} />}
-                  {attrStats.none > 0 && <div className="rounded-full bg-muted" style={{ width: `${attrStats.none / utterances.length * 100}%` }} />}
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             <div className="lg:col-span-1 space-y-4">

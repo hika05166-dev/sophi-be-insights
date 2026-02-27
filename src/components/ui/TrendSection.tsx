@@ -2,7 +2,6 @@
 
 import { TrendingUp, Search } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import type { TrendTopic } from '@/types'
 
 interface TrendSectionProps {
@@ -41,7 +40,6 @@ function TrendList({
               {topic.sample || topic.keyword}
             </span>
             <div className="flex items-center gap-2 shrink-0">
-              <Badge variant="outline">{topic.keyword}</Badge>
               <span className="text-xs text-muted-foreground w-8 text-right">{topic.count}件</span>
             </div>
           </button>
