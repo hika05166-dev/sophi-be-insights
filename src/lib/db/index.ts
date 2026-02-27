@@ -200,11 +200,94 @@ function executeSelect(sql: string, params: any[]): any[] {
       .map(u => ({ id: u.id, content: u.content }))
   }
 
+  // SELECT content FROM utterances WHERE role = 'user' AND content LIKE ?
+  if (/^SELECT content FROM utterances WHERE role = 'user' AND content LIKE \?$/i.test(s)) {
+    const pattern = params[0] as string
+    return store.utterances
+      .filter(u => u.role === 'user' && likeMatch(u.content, pattern))
+      .map(u => ({ content: u.content }))
+  }
+
   // SELECT content FROM utterances WHERE role = 'user'
   if (/^SELECT content FROM utterances WHERE role = 'user'$/i.test(s)) {
     return store.utterances
       .filter(u => u.role === 'user')
       .map(u => ({ content: u.content }))
+  }
+
+  // SELECT cycle_phase, COUNT(*) as count FROM users WHERE id IN (...) GROUP BY cycle_phase
+  if (/SELECT cycle_phase, COUNT\(\*\) as count FROM users WHERE id IN \([\?,\s]+\) GROUP BY cycle_phase/i.test(s)) {
+    const ids = params as number[]
+    const groups: Record<string, number> = {}
+    for (const u of store.users.filter(u => ids.includes(u.id))) {
+      groups[u.cycle_phase] = (groups[u.cycle_phase] || 0) + 1
+    }
+    return Object.entries(groups).map(([cycle_phase, count]) => ({ cycle_phase, count }))
+  }
+
+  // Cross-tab: age_group × cycle_phase
+  if (/SELECT u\.age_group as row, u\.cycle_phase as col/i.test(s)) {
+    const pattern = params[0] as string
+    const groups: Record<string, Record<string, number>> = {}
+    for (const ut of store.utterances) {
+      if (ut.role !== 'user' || !likeMatch(ut.content, pattern)) continue
+      const user = store.users.find(u => u.id === ut.user_id)
+      if (!user) continue
+      if (!groups[user.age_group]) groups[user.age_group] = {}
+      groups[user.age_group][user.cycle_phase] = (groups[user.age_group][user.cycle_phase] || 0) + 1
+    }
+    return Object.entries(groups).flatMap(([row, cols]) =>
+      Object.entries(cols).map(([col, count]) => ({ row, col, count }))
+    )
+  }
+
+  // Cross-tab: mode × cycle_phase
+  if (/SELECT u\.mode as row, u\.cycle_phase as col/i.test(s)) {
+    const pattern = params[0] as string
+    const groups: Record<string, Record<string, number>> = {}
+    for (const ut of store.utterances) {
+      if (ut.role !== 'user' || !likeMatch(ut.content, pattern)) continue
+      const user = store.users.find(u => u.id === ut.user_id)
+      if (!user) continue
+      if (!groups[user.mode]) groups[user.mode] = {}
+      groups[user.mode][user.cycle_phase] = (groups[user.mode][user.cycle_phase] || 0) + 1
+    }
+    return Object.entries(groups).flatMap(([row, cols]) =>
+      Object.entries(cols).map(([col, count]) => ({ row, col, count }))
+    )
+  }
+
+  // Cross-tab: age_group × mode
+  if (/SELECT u\.age_group as row, u\.mode as col/i.test(s)) {
+    const pattern = params[0] as string
+    const groups: Record<string, Record<string, number>> = {}
+    for (const ut of store.utterances) {
+      if (ut.role !== 'user' || !likeMatch(ut.content, pattern)) continue
+      const user = store.users.find(u => u.id === ut.user_id)
+      if (!user) continue
+      if (!groups[user.age_group]) groups[user.age_group] = {}
+      groups[user.age_group][user.mode] = (groups[user.age_group][user.mode] || 0) + 1
+    }
+    return Object.entries(groups).flatMap(([row, cols]) =>
+      Object.entries(cols).map(([col, count]) => ({ row, col, count }))
+    )
+  }
+
+  // Hourly heatmap: CAST(substr(created_at, 12, 2)...) as hour
+  if (/CAST\(substr\(created_at, 12, 2\) AS INTEGER\) as hour/i.test(s)) {
+    const pattern = params[0] as string
+    const groups: Record<string, number> = {}
+    for (const ut of store.utterances) {
+      if (ut.role !== 'user' || !likeMatch(ut.content, pattern)) continue
+      const hour = parseInt(ut.created_at.substring(11, 13), 10)
+      const dayNum = new Date(ut.created_at).getDay()
+      const key = `${hour}:${dayNum}`
+      groups[key] = (groups[key] || 0) + 1
+    }
+    return Object.entries(groups).map(([key, count]) => {
+      const [h, d] = key.split(':')
+      return { hour: parseInt(h), day_num: parseInt(d), count }
+    })
   }
 
   // SELECT keyword, COUNT(*) as count FROM search_logs GROUP BY keyword ORDER BY count DESC LIMIT 10
