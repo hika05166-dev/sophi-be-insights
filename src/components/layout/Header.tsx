@@ -23,7 +23,7 @@ export default function Header({ user }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <header className="bg-card border-b sticky top-0 z-30">
+    <header className="bg-background border-b sticky top-0 z-30">
       <div className="flex items-center justify-between px-4 h-14">
         <div className="flex items-center gap-3 md:hidden">
           <Button variant="ghost" size="icon" onClick={() => setMenuOpen(!menuOpen)}>
@@ -42,7 +42,7 @@ export default function Header({ user }: HeaderProps) {
       </div>
 
       {menuOpen && (
-        <div className="md:hidden border-t bg-card px-2 py-2 space-y-0.5">
+        <div className="md:hidden border-t bg-background px-2 py-2 space-y-0.5">
           {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
             const isActive = pathname === href
             return (

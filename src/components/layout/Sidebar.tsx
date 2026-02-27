@@ -18,7 +18,6 @@ export default function Sidebar() {
     }
     load()
     window.addEventListener('storage', load)
-    // results ページ遷移後に更新するため、popstate/pushstate も監視
     window.addEventListener('il_history_updated', load)
     return () => {
       window.removeEventListener('storage', load)
@@ -36,26 +35,27 @@ export default function Sidebar() {
   }
 
   const currentKeyword = (() => {
-    try {
-      const params = new URLSearchParams(window.location.search)
-      return params.get('q') || ''
-    } catch { return '' }
+    try { return new URLSearchParams(window.location.search).get('q') || '' }
+    catch { return '' }
   })()
 
   return (
-    <aside className="hidden md:flex flex-col w-56 shrink-0 bg-card border-r h-screen sticky top-0">
+    <aside
+      className="hidden md:flex flex-col w-56 shrink-0 border-r h-screen sticky top-0"
+      style={{ background: 'hsl(var(--sidebar))' }}
+    >
       {/* ロゴ */}
-      <div className="px-4 py-5 border-b">
-        <Link href="/search" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center shrink-0">
-            <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+      <div className="px-4 py-5 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+        <Link href="/search" className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded bg-foreground flex items-center justify-center shrink-0">
+            <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
               <circle cx="8" cy="8" r="5.5" stroke="white" strokeWidth="1.8"/>
               <circle cx="8" cy="8" r="2.5" stroke="white" strokeWidth="1.4" strokeDasharray="2 1.5"/>
               <line x1="12" y1="12" x2="16" y2="16" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
             </svg>
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground leading-tight">Insight Lens</p>
+            <p className="text-sm font-medium text-foreground leading-tight">Insight Lens</p>
             <p className="text-xs text-muted-foreground leading-tight">ソフィBe</p>
           </div>
         </Link>
@@ -65,25 +65,25 @@ export default function Sidebar() {
         {/* 新しい検索ボタン */}
         <button
           onClick={() => router.push('/search')}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-md border border-dashed text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-accent transition-colors"
+          className="w-full flex items-center gap-2 px-3 py-1.5 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-black/5 transition-colors"
         >
-          <Plus size={14} />
+          <Plus size={13} />
           新しい検索
         </button>
 
-        {/* ショートカット：キーワード分析 */}
+        {/* クイックアクセス */}
         <div>
-          <p className="px-3 mb-1 text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">クイックアクセス</p>
+          <p className="px-3 mb-1 text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">クイックアクセス</p>
           <Link
             href="/dashboard"
             className={cn(
-              'flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-              pathname === '/dashboard' || pathname.startsWith('/dashboard')
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              'flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors',
+              pathname.startsWith('/dashboard')
+                ? 'bg-black/8 text-foreground font-medium'
+                : 'text-muted-foreground hover:text-foreground hover:bg-black/5'
             )}
           >
-            <BarChart2 size={14} />
+            <BarChart2 size={13} />
             キーワード分析
           </Link>
         </div>
@@ -91,7 +91,7 @@ export default function Sidebar() {
         {/* 分析履歴 */}
         {history.length > 0 && (
           <div>
-            <p className="px-3 mb-1 text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">分析履歴</p>
+            <p className="px-3 mb-1 text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">分析履歴</p>
             <div className="space-y-0.5">
               {history.map(kw => {
                 const isActive = pathname.startsWith('/results') && currentKeyword === kw
@@ -100,20 +100,20 @@ export default function Sidebar() {
                     key={kw}
                     href={`/results?q=${encodeURIComponent(kw)}`}
                     className={cn(
-                      'group flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors',
+                      'group flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors',
                       isActive
-                        ? 'bg-accent text-accent-foreground'
-                        : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                        ? 'bg-black/8 text-foreground font-medium'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-black/5'
                     )}
                   >
-                    <Search size={12} className="shrink-0 opacity-50" />
+                    <Search size={11} className="shrink-0 opacity-40" />
                     <span className="flex-1 truncate">{kw}</span>
                     <button
                       onClick={e => removeHistory(kw, e)}
-                      className="shrink-0 opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity"
+                      className="shrink-0 opacity-0 group-hover:opacity-40 hover:!opacity-70 transition-opacity"
                       aria-label="履歴を削除"
                     >
-                      <X size={11} />
+                      <X size={10} />
                     </button>
                   </Link>
                 )
@@ -123,8 +123,8 @@ export default function Sidebar() {
         )}
       </div>
 
-      <div className="px-4 py-3 border-t">
-        <p className="text-xs text-muted-foreground">v0.1.0 プロトタイプ</p>
+      <div className="px-4 py-3 border-t" style={{ borderColor: 'hsl(var(--border))' }}>
+        <p className="text-[11px] text-muted-foreground/60">v0.1.0 プロトタイプ</p>
       </div>
     </aside>
   )

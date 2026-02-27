@@ -19,12 +19,8 @@ function classifyAttributeHeuristic(content: string): 'detailed' | 'self_solving
   const hasConcern = ['不安', '心配', '怖い', '辛い', 'つらい', '困って', 'ひどい', '悪化'].some(w => content.includes(w))
   const hasSolution = ['飲んでいます', '試してみました', '実践', '使っています', 'やってみた', '効果がありました', '改善', '対処'].some(w => content.includes(w))
 
-  if (length > 80 && (hasConcern || hasQuestion)) {
-    return 'detailed'
-  }
-  if (hasSolution && length > 50) {
-    return 'self_solving'
-  }
+  if (length > 80 && (hasConcern || hasQuestion)) return 'detailed'
+  if (hasSolution && length > 50) return 'self_solving'
   return 'none'
 }
 
@@ -40,28 +36,49 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const keyword = searchParams.get('q') || ''
-    const filter = searchParams.get('filter') || 'all' // 'all' | 'detailed' | 'self_solving'
+    const relatedParam = searchParams.get('related') || ''
+    const filter = searchParams.get('filter') || 'all'
     const groupIds = searchParams.get('group_ids')?.split(',').map(Number).filter(Boolean) || []
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '30')
     const offset = (page - 1) * limit
 
-    let conditions = ["u.role = 'user'"]
-    const params: (string | number)[] = []
+    // 元キーワード + 関連クエリ（重複除去）
+    const relatedQueries = relatedParam
+      ? relatedParam.split(',').map(q => q.trim()).filter(Boolean)
+      : []
+    const allQueries = keyword
+      ? [keyword, ...relatedQueries.filter(q => q !== keyword)]
+      : []
 
-    if (keyword) {
-      conditions.push('u.content LIKE ?')
-      params.push(`%${keyword}%`)
+    const baseCondition = "u.role = 'user'"
+    const queryParams: (string | number)[] = []
+
+    let whereClause = baseCondition
+    if (allQueries.length > 0) {
+      const kwConditions = allQueries.map(() => 'u.content LIKE ?').join(' OR ')
+      whereClause += ` AND (${kwConditions})`
+      queryParams.push(...allQueries.map(q => `%${q}%`))
     }
 
     let utterances = db.prepare(
       `SELECT u.*, us.anonymous_id, us.age_group, us.mode, us.cycle_phase
        FROM utterances u
        JOIN users us ON u.user_id = us.id
-       WHERE ${conditions.join(' AND ')}
+       WHERE ${whereClause}
        ORDER BY u.created_at DESC
        LIMIT ? OFFSET ?`
-    ).all(...params, 200, 0) as UtteranceWithAttribute[]
+    ).all(...queryParams, 200, 0) as UtteranceWithAttribute[]
+
+    // 各発話がどのクエリにマッチしたか記録
+    if (allQueries.length > 0) {
+      utterances = utterances.map(u => ({
+        ...u,
+        matchedQueries: allQueries.filter(q =>
+          u.content.toLowerCase().includes(q.toLowerCase())
+        ),
+      }))
+    }
 
     // グループIDフィルタ
     if (groupIds.length > 0) {
@@ -71,7 +88,6 @@ export async function GET(request: NextRequest) {
     // 属性分類
     const client = getAnthropicClient()
     if (client && utterances.length > 0 && utterances.length <= 30) {
-      // 少量のデータはClaudeで分類
       const utteranceText = utterances.map((u, i) => `[${i + 1}] ${u.content}`).join('\n')
       const prompt = `以下のユーザー発話を分析し、各発話の属性を分類してください。
 
@@ -84,8 +100,7 @@ ${utteranceText}
 - "none": 上記に当てはまらない
 
 以下のJSON形式で回答してください：
-{"classifications": [{"index": 1, "attribute": "detailed"}, ...]}
-      `
+{"classifications": [{"index": 1, "attribute": "detailed"}, ...]}`
 
       try {
         const response = await client.messages.create({
@@ -116,14 +131,13 @@ ${utteranceText}
         }))
       }
     } else {
-      // フォールバック: ヒューリスティック分類
       utterances = utterances.map(u => ({
         ...u,
         attribute: classifyAttributeHeuristic(u.content),
       }))
     }
 
-    // 属性フィルタ適用
+    // 属性フィルタ
     let filtered = utterances
     if (filter === 'detailed') {
       filtered = utterances.filter(u => u.attribute === 'detailed')

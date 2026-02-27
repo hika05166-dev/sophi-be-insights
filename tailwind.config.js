@@ -24,9 +24,10 @@ module.exports = {
         popover: { DEFAULT: 'hsl(var(--popover))', foreground: 'hsl(var(--popover-foreground))' },
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        sm: 'calc(var(--radius) - 8px)',   /* 8px  */
+        md: 'calc(var(--radius) - 4px)',   /* 12px */
+        lg: 'var(--radius)',               /* 16px */
+        xl: 'calc(var(--radius) + 8px)',   /* 24px */
       },
       fontFamily: { sans: ['Noto Sans JP', 'sans-serif'] },
       keyframes: {

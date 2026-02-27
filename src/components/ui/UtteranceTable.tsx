@@ -10,35 +10,48 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import type { Utterance, UserAttribute } from '@/types'
 
 interface UtteranceTableProps {
-  utterances: (Utterance & { attribute?: UserAttribute })[]
+  utterances: (Utterance & { attribute?: UserAttribute; matchedQueries?: string[] })[]
   isLoading: boolean
   total: number
   currentPage: number
   limit: number
   onPageChange: (page: number) => void
   keyword: string
+  relatedQueries?: string[]
   selectedIds?: Set<number>
   onSelectionChange?: (ids: Set<number>) => void
 }
 
-function highlightKeyword(text: string, keyword: string): React.ReactNode {
-  if (!keyword) return text
-  const parts = text.split(new RegExp(`(${keyword})`, 'gi'))
-  return parts.map((part, i) =>
-    part.toLowerCase() === keyword.toLowerCase()
-      ? <mark key={i} className="bg-yellow-100 text-yellow-900 rounded px-0.5">{part}</mark>
-      : part
-  )
+// 複数キーワードをまとめてハイライト
+function highlightText(text: string, keywords: string[]): React.ReactNode {
+  if (keywords.length === 0) return text
+  const escaped = keywords.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  try {
+    const parts = text.split(new RegExp(`(${escaped.join('|')})`, 'gi'))
+    return parts.map((part, i) => {
+      const isMatch = keywords.some(k => part.toLowerCase() === k.toLowerCase())
+      return isMatch
+        ? <mark key={i} className="bg-yellow-100 text-yellow-900 rounded px-0.5">{part}</mark>
+        : part
+    })
+  } catch {
+    return text
+  }
 }
 
 export default function UtteranceTable({
   utterances, isLoading, total, currentPage, limit,
-  onPageChange, keyword, selectedIds, onSelectionChange,
+  onPageChange, keyword, relatedQueries = [], selectedIds, onSelectionChange,
 }: UtteranceTableProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const totalPages = Math.ceil(total / limit)
   const selectable = selectedIds !== undefined && onSelectionChange !== undefined
+
+  // ハイライト対象（元KW + 関連クエリ）
+  const allHighlightKeywords = keyword
+    ? [keyword, ...relatedQueries.filter(q => q !== keyword)]
+    : relatedQueries
 
   const handleRowClick = (utterance: Utterance) => {
     const q = searchParams.get('q') || keyword
@@ -100,6 +113,15 @@ export default function UtteranceTable({
             <div className="divide-y">
               {utterances.map(utterance => {
                 const isSelected = selectedIds?.has(utterance.id) ?? false
+                const matched = utterance.matchedQueries ?? []
+                const hasExactKeyword = keyword
+                  ? utterance.content.toLowerCase().includes(keyword.toLowerCase())
+                  : false
+                // 元KWを除いたマッチした関連クエリ
+                const relatedMatches = matched.filter(q =>
+                  !keyword || q.toLowerCase() !== keyword.toLowerCase()
+                )
+
                 return (
                   <div
                     key={utterance.id}
@@ -112,15 +134,41 @@ export default function UtteranceTable({
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                      <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
                         <span className="text-xs font-medium text-muted-foreground">{utterance.anonymous_id}</span>
                         {utterance.age_group && <Badge variant="outline">{utterance.age_group}</Badge>}
                         {utterance.cycle_phase && <Badge variant="outline">{utterance.cycle_phase}</Badge>}
                         {utterance.attribute === 'detailed' && <Badge variant="destructive">深刻な悩み</Badge>}
                         {utterance.attribute === 'self_solving' && <Badge variant="secondary">自己解決型</Badge>}
+
+                        {/* 元キーワード含有インジケーター */}
+                        {keyword && (
+                          hasExactKeyword ? (
+                            <span className="inline-flex items-center gap-0.5 text-[11px] font-medium px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+                              ✓ 元KW含む
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center text-[11px] px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground border border-border">
+                              関連KWのみ
+                            </span>
+                          )
+                        )}
+
+                        {/* マッチした関連クエリタグ（最大3個） */}
+                        {relatedMatches.slice(0, 3).map(q => (
+                          <span
+                            key={q}
+                            className="inline-flex items-center text-[11px] px-1.5 py-0.5 rounded-md bg-accent text-accent-foreground border border-border/60"
+                          >
+                            {q}
+                          </span>
+                        ))}
+                        {relatedMatches.length > 3 && (
+                          <span className="text-[11px] text-muted-foreground">+{relatedMatches.length - 3}</span>
+                        )}
                       </div>
                       <p className="text-sm text-foreground line-clamp-2 leading-relaxed">
-                        {highlightKeyword(utterance.content, keyword)}
+                        {highlightText(utterance.content, allHighlightKeywords)}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">{formatDate(utterance.created_at)}</p>
                     </div>

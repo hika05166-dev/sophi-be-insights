@@ -6,26 +6,28 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    /* Manus-inspired warm neutral palette */
+    --background: 42 14% 96%;        /* #f6f5f1 warm off-white */
+    --foreground: 30 6% 11%;         /* #1c1b18 near-black warm */
+    --card: 0 0% 100%;               /* white cards on warm bg */
+    --card-foreground: 30 6% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 72% 51%;
+    --popover-foreground: 30 6% 11%;
+    --primary: 30 6% 11%;            /* near-black */
+    --primary-foreground: 42 14% 96%;
+    --secondary: 42 9% 91%;
+    --secondary-foreground: 30 5% 25%;
+    --muted: 42 9% 91%;
+    --muted-foreground: 35 3% 51%;
+    --accent: 42 9% 89%;
+    --accent-foreground: 30 6% 11%;
+    --destructive: 0 62% 46%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.5rem;
+    --border: 42 8% 87%;             /* subtle warm border */
+    --input: 42 8% 87%;
+    --ring: 30 6% 11%;
+    --radius: 1rem;                  /* 16px — scale: sm=8 md=12 lg=16 xl=24 */
+    --sidebar: 42 10% 92%;           /* slightly darker sidebar */
   }
 }
 
@@ -37,15 +39,15 @@
   }
 }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: hsl(var(--muted)); }
-::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.4); }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-spinner {
-  width: 28px; height: 28px;
-  border: 2.5px solid hsl(var(--border));
+  width: 24px; height: 24px;
+  border: 2px solid hsl(var(--border));
   border-top-color: hsl(var(--foreground));
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
