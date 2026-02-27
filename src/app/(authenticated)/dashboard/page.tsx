@@ -16,9 +16,24 @@ import type { DashboardData, CrossTabCell } from '@/types'
 type AxisKey = '年代' | 'モード' | '生理周期'
 const AXES: AxisKey[] = ['年代', 'モード', '生理周期']
 const AXIS_VALUES: Record<AxisKey, string[]> = {
-  '年代': ['10代', '20代', '30代', '40代〜'],
+  '年代': [
+    '10代前半', '10代後半', '20代前半', '20代後半',
+    '30代前半', '30代後半', '40代前半', '40代後半',
+    '50代前半', '50代後半', '60代前半', '60代後半',
+  ],
   'モード': ['生理管理', '妊活'],
   '生理周期': ['月経期', '卵胞期', '排卵期', '黄体期'],
+}
+
+const LABEL_COLOR: Record<string, string> = {
+  '10代前半': '#7dd3fc', '10代後半': '#38bdf8',
+  '20代前半': '#a5b4fc', '20代後半': '#818cf8',
+  '30代前半': '#c4b5fd', '30代後半': '#a78bfa',
+  '40代前半': '#d8b4fe', '40代後半': '#c084fc',
+  '50代前半': '#f0abfc', '50代後半': '#e879f9',
+  '60代前半': '#f9a8d4', '60代後半': '#f472b6',
+  '生理管理': '#ff6b9d', '妊活': '#fb923c',
+  '月経期': '#ff6b9d', '卵胞期': '#c084fc', '排卵期': '#818cf8', '黄体期': '#f472b6',
 }
 
 const swap = (d: CrossTabCell) => ({ row: d.col, col: d.row, count: d.count })
@@ -33,6 +48,20 @@ function getCrossTabData(rowAxis: AxisKey, colAxis: AxisKey, data: DashboardData
   return []
 }
 
+function get1DData(axis: AxisKey, data: DashboardData) {
+  const map: Record<string, number> = {}
+  const src = axis === '年代' ? data.agePhaseMatrix
+    : axis === 'モード' ? data.modePhaseMatrix
+    : data.agePhaseMatrix
+  for (const c of src) {
+    const key = axis === '生理周期' ? c.col : c.row
+    map[key] = (map[key] || 0) + c.count
+  }
+  const entries = AXIS_VALUES[axis].map(v => ({ label: v, count: map[v] || 0 }))
+  const total = entries.reduce((s, e) => s + e.count, 0)
+  return { entries, total }
+}
+
 function DashboardContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -40,7 +69,7 @@ function DashboardContent() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [rowAxis, setRowAxis] = useState<AxisKey>('年代')
-  const [colAxis, setColAxis] = useState<AxisKey>('生理周期')
+  const [colAxis, setColAxis] = useState<AxisKey | null>('生理周期')
 
   useEffect(() => {
     if (!keyword) return
@@ -107,7 +136,11 @@ function DashboardContent() {
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div>
                       <CardTitle>クロス集計</CardTitle>
-                      <CardDescription>「{keyword}」に関する発話数を2軸で集計</CardDescription>
+                      <CardDescription>
+                        {colAxis
+                          ? `「${keyword}」に関する発話数を2軸で集計`
+                          : `「${keyword}」に関する発話数を1軸で集計`}
+                      </CardDescription>
                     </div>
                     <div className="flex items-center gap-2 text-sm shrink-0">
                       <select
@@ -120,20 +153,55 @@ function DashboardContent() {
                       <span className="text-muted-foreground font-medium">×</span>
                       <select
                         className="border rounded px-2 py-1 text-sm bg-background text-foreground"
-                        value={colAxis}
-                        onChange={e => setColAxis(e.target.value as AxisKey)}
+                        value={colAxis ?? ''}
+                        onChange={e => setColAxis(e.target.value === '' ? null : e.target.value as AxisKey)}
                       >
+                        <option value="">— なし（1軸）</option>
                         {AXES.filter(a => a !== rowAxis).map(a => <option key={a} value={a}>{a}</option>)}
                       </select>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <CrossTabHeatmap
-                    data={getCrossTabData(rowAxis, colAxis, data)}
-                    rows={AXIS_VALUES[rowAxis]}
-                    cols={AXIS_VALUES[colAxis]}
-                  />
+                  {colAxis ? (
+                    <CrossTabHeatmap
+                      data={getCrossTabData(rowAxis, colAxis, data)}
+                      rows={AXIS_VALUES[rowAxis]}
+                      cols={AXIS_VALUES[colAxis]}
+                    />
+                  ) : (() => {
+                    const { entries, total } = get1DData(rowAxis, data)
+                    const maxCount = Math.max(...entries.map(e => e.count), 1)
+                    return (
+                      <div className="space-y-1.5">
+                        {entries.map(({ label, count }) => {
+                          const p = total > 0 ? (count / total) * 100 : 0
+                          const color = LABEL_COLOR[label] ?? '#94a3b8'
+                          return (
+                            <div key={label} className="flex items-center gap-3">
+                              <span className="text-xs text-muted-foreground w-20 text-right shrink-0 flex items-center justify-end gap-1.5">
+                                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
+                                {label}
+                              </span>
+                              <div className="flex-1 h-5 bg-gray-100 rounded overflow-hidden">
+                                <div
+                                  className="h-full rounded transition-all"
+                                  style={{ width: `${(count / maxCount) * 100}%`, background: color + 'cc' }}
+                                />
+                              </div>
+                              <span className="text-xs text-foreground w-24 shrink-0">
+                                <span className="font-semibold">{p.toFixed(1)}%</span>
+                                <span className="text-muted-foreground ml-1">({count}件)</span>
+                              </span>
+                            </div>
+                          )
+                        })}
+                        <p className="text-[10px] text-muted-foreground mt-2 text-right">
+                          ※ 割合はキーワードに関する発話全体に占める比率
+                        </p>
+                      </div>
+                    )
+                  })()}
                 </CardContent>
               </Card>
 

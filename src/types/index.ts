@@ -1,4 +1,10 @@
-export type AgeGroup = '10代' | '20代' | '30代' | '40代〜'
+export type AgeGroup =
+  '10代前半' | '10代後半' |
+  '20代前半' | '20代後半' |
+  '30代前半' | '30代後半' |
+  '40代前半' | '40代後半' |
+  '50代前半' | '50代後半' |
+  '60代前半' | '60代後半'
 export type UserMode = '生理管理' | '妊活'
 export type CyclePhase = '月経期' | '卵胞期' | '排卵期' | '黄体期'
 export type Role = 'user' | 'assistant'

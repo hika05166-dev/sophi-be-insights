@@ -1,7 +1,14 @@
 import { getDb } from './index'
 import { initSchema, isSeeded } from './schema'
 
-const AGE_GROUPS = ['10代', '20代', '30代', '40代〜'] as const
+const AGE_GROUPS = [
+  '10代前半', '10代後半',
+  '20代前半', '20代後半',
+  '30代前半', '30代後半',
+  '40代前半', '40代後半',
+  '50代前半', '50代後半',
+  '60代前半', '60代後半',
+] as const
 const MODES = ['生理管理', '妊活'] as const
 const CYCLE_PHASES = ['月経期', '卵胞期', '排卵期', '黄体期'] as const
 
@@ -199,6 +206,16 @@ function subtractDays(date: Date, days: number): Date {
   return d
 }
 
+function randomHour(): number {
+  const r = Math.random()
+  if (r < 0.10) return randomInt(7, 9)    // 朝
+  if (r < 0.25) return randomInt(10, 12)  // 午前
+  if (r < 0.40) return randomInt(12, 14)  // 昼
+  if (r < 0.55) return randomInt(15, 17)  // 午後
+  if (r < 0.90) return randomInt(19, 23)  // 夜（最多）
+  return randomInt(0, 5)                   // 深夜
+}
+
 export function seedDatabase(): void {
   initSchema()
   if (isSeeded()) return
@@ -215,8 +232,8 @@ export function seedDatabase(): void {
   for (let i = 1; i <= 300; i++) {
     const anonymous_id = `user_${String(i).padStart(3, '0')}`
     const age_group = randomFrom(AGE_GROUPS)
-    // 妊活モードは20代〜40代に多め
-    const mode = age_group === '10代' ? '生理管理' : (Math.random() < 0.3 ? '妊活' : '生理管理')
+    const isTeen = age_group.startsWith('10代')
+    const mode = isTeen ? '生理管理' : (Math.random() < 0.35 ? '妊活' : '生理管理')
     const cycle_phase = randomFrom(CYCLE_PHASES)
     const created_at = formatDate(subtractDays(now, randomInt(30, 365)))
 
@@ -244,6 +261,7 @@ export function seedDatabase(): void {
 
       const template = randomFrom(allTemplates)
       const sessionDate = subtractDays(now, randomInt(1, 180))
+      sessionDate.setHours(randomHour(), randomInt(0, 59), 0, 0)
 
       template.forEach((msg, idx) => {
         const msgDate = new Date(sessionDate)
