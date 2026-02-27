@@ -19,7 +19,7 @@ function formatDate(dateStr: string) {
 }
 
 export default function ChatHistory({ session, isSelected, onToggle }: ChatHistoryProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(false)
   const firstUserMessage = session.messages.find(m => m.role === 'user')?.content || ''
 
   return (
@@ -35,7 +35,7 @@ export default function ChatHistory({ session, isSelected, onToggle }: ChatHisto
               <Badge variant="outline">{session.messages.length}件</Badge>
             </div>
             {!isExpanded && (
-              <p className="text-sm text-foreground line-clamp-1 pr-4">{firstUserMessage}</p>
+              <p className="text-sm text-foreground line-clamp-4 pr-4">{firstUserMessage}</p>
             )}
           </div>
           <div className="text-muted-foreground group-hover:text-foreground transition-colors shrink-0">
@@ -56,7 +56,7 @@ export default function ChatHistory({ session, isSelected, onToggle }: ChatHisto
                   </div>
                 )}
                 <div className={`max-w-[80%] rounded-xl px-3 py-2 text-sm leading-relaxed ${
-                  isUser ? 'bg-primary text-primary-foreground rounded-tr-sm' : 'bg-muted text-foreground rounded-tl-sm'
+                  isUser ? 'bg-foreground/10 text-foreground rounded-tr-sm' : 'bg-muted text-foreground rounded-tl-sm'
                 }`}>
                   {msg.content}
                 </div>

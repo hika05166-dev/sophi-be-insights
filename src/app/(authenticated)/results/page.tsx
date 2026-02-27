@@ -156,12 +156,12 @@ function ResultsContent() {
           </div>
 
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <div className="lg:col-span-1 space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
+            <div className="lg:col-span-1 space-y-3">
               <GroupingSummary groups={groups} isLoading={isLoadingGroups} activeGroupIds={activeGroupIds} onGroupSelect={setGroupFilter} />
               <UserAttributeFilter activeFilter={activeFilter} onFilterChange={setFilter} />
             </div>
-            <div className="lg:col-span-2 space-y-3">
+            <div className="lg:col-span-3 space-y-3">
               {selectedIds.size > 0 && (
                 <div className="flex items-center justify-between px-4 py-2.5 rounded-lg border bg-card animate-fade-in">
                   <span className="text-sm text-foreground">

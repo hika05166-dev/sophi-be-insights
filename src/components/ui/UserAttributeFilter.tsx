@@ -11,22 +11,22 @@ interface UserAttributeFilterProps {
   onFilterChange: (filter: FilterType) => void
 }
 
-const FILTERS: { value: FilterType; label: string; description: string }[] = [
-  { value: 'all', label: 'すべて', description: '全ての発話を表示' },
-  { value: 'detailed', label: '深刻な悩み', description: '長文で深刻な悩みを相談しているユーザー' },
-  { value: 'self_solving', label: '自己解決型', description: '対処法を自分なりに実践・共有しているユーザー' },
+const FILTERS: { value: FilterType; label: string }[] = [
+  { value: 'all', label: 'すべて' },
+  { value: 'detailed', label: '深刻な悩み' },
+  { value: 'self_solving', label: '自己解決型' },
 ]
 
 export default function UserAttributeFilter({ activeFilter, onFilterChange }: UserAttributeFilterProps) {
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-2">
-          <Filter size={15} className="text-muted-foreground" />
-          <CardTitle>属性フィルター</CardTitle>
+      <CardHeader className="px-3 py-2 pb-1.5">
+        <div className="flex items-center gap-1.5">
+          <Filter size={13} className="text-muted-foreground" />
+          <CardTitle className="text-xs font-semibold">属性フィルター</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="space-y-1.5">
+      <CardContent className="px-2 pb-2 space-y-1">
         {FILTERS.map(filter => {
           const isActive = activeFilter === filter.value
           return (
@@ -34,16 +34,15 @@ export default function UserAttributeFilter({ activeFilter, onFilterChange }: Us
               key={filter.value}
               onClick={() => onFilterChange(filter.value)}
               className={cn(
-                'w-full text-left p-3 rounded-md border text-sm transition-colors hover:bg-accent',
-                isActive ? 'bg-accent border-border font-medium' : 'bg-background border-border/50'
+                'w-full text-left px-2 py-1.5 rounded border text-xs transition-colors hover:bg-accent',
+                isActive ? 'bg-accent border-border font-semibold' : 'bg-background border-border/50'
               )}
             >
-              <p className="text-foreground font-medium text-xs">{filter.label}</p>
-              <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{filter.description}</p>
+              {filter.label}
             </button>
           )
         })}
-        <p className="text-xs text-muted-foreground pt-1">※ AI + ヒューリスティックで自動判定</p>
+        <p className="text-[10px] text-muted-foreground pt-0.5">※ AI + ヒューリスティックで自動判定</p>
       </CardContent>
     </Card>
   )
