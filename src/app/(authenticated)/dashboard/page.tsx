@@ -137,44 +137,49 @@ function DashboardContent() {
                 </CardContent>
               </Card>
 
-              {/* 時間帯別 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>時間帯別発話数</CardTitle>
-                  <CardDescription>「{keyword}」に関する発話が多い時間帯</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="max-w-xs">
-                    <HourlyHeatmapChart data={data.hourlyHeatmap} />
-                  </div>
-                </CardContent>
-              </Card>
+              {/* 時間帯別 + 共起キーワード: 2カラム */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* 時間帯別 */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>時間帯別発話数</CardTitle>
+                    <CardDescription>「{keyword}」に関する発話が多い時間帯</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="max-w-xs">
+                      <HourlyHeatmapChart data={data.hourlyHeatmap} />
+                    </div>
+                  </CardContent>
+                </Card>
 
-              {/* 共起キーワード */}
-              {data.coOccurrence.length > 0 && (
+                {/* 共起キーワード */}
                 <Card>
                   <CardHeader>
                     <CardTitle>共起キーワード分析</CardTitle>
                     <CardDescription>「{keyword}」と同じ発話内でよく使われるキーワード</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      {data.coOccurrence.map(item => (
-                        <div key={item.keyword} className="flex items-center gap-3">
-                          <span className="text-sm text-foreground w-28 shrink-0">{item.keyword}</span>
-                          <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
-                            <div
-                              className="h-2 rounded-full bg-primary transition-all"
-                              style={{ width: `${(item.count / coOccurMax) * 100}%` }}
-                            />
+                    {data.coOccurrence.length > 0 ? (
+                      <div className="space-y-2">
+                        {data.coOccurrence.map(item => (
+                          <div key={item.keyword} className="flex items-center gap-3">
+                            <span className="text-sm text-foreground w-28 shrink-0">{item.keyword}</span>
+                            <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
+                              <div
+                                className="h-2 rounded-full bg-primary transition-all"
+                                style={{ width: `${(item.count / coOccurMax) * 100}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-muted-foreground w-8 text-right">{item.count}</span>
                           </div>
-                          <span className="text-xs text-muted-foreground w-8 text-right">{item.count}</span>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground py-4 text-center">共起キーワードが見つかりませんでした</p>
+                    )}
                   </CardContent>
                 </Card>
-              )}
+              </div>
 
               {/* 月別トレンド */}
               <Card>

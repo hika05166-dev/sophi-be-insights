@@ -81,7 +81,12 @@ export default function CrossTabHeatmap({ data, rows, cols }: CrossTabHeatmapPro
                       }}
                       title={`${row} × ${col}: ${count}件`}
                     >
-                      {count > 0 ? count : ''}
+                      {count > 0 ? (
+                        <span className="flex flex-col leading-tight">
+                          <span className="font-semibold">{count}</span>
+                          <span className="text-[9px] opacity-70">件</span>
+                        </span>
+                      ) : ''}
                     </td>
                   )
                 })}
