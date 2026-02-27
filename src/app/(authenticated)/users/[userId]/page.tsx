@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import type { ChatSession, Insight } from '@/types'
-import { ArrowLeft, Sparkles, User } from 'lucide-react'
+import type { ChatSession, Insight, UserStats } from '@/types'
+import { ArrowLeft, Sparkles, User, Clock, Calendar, MessageSquare, BarChart2 } from 'lucide-react'
 
 interface UserData { id: number; anonymous_id: string; age_group: string; mode: string; cycle_phase: string; created_at: string }
 
@@ -22,21 +22,25 @@ export default function UserDetailPage() {
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set())
   const [insight, setInsight] = useState<Insight | null>(null)
+  const [stats, setStats] = useState<UserStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isGeneratingInsight, setIsGeneratingInsight] = useState(false)
   const [isAiGenerated, setIsAiGenerated] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetch(`/api/users/${userId}`)
-      .then(r => r.json())
-      .then(data => {
+    Promise.all([
+      fetch(`/api/users/${userId}`).then(r => r.json()),
+      fetch(`/api/users/${userId}/stats`).then(r => r.json()),
+    ])
+      .then(([data, statsData]) => {
         if (data.error) { setError(data.error) } else {
           setUser(data.user)
           const fetched: ChatSession[] = data.sessions || []
           setSessions(fetched)
           setSelectedSessions(new Set(fetched.map((s: ChatSession) => s.session_id)))
         }
+        if (!statsData.error) setStats(statsData)
       })
       .catch(() => setError('データの取得に失敗しました'))
       .finally(() => setIsLoading(false))
@@ -99,6 +103,66 @@ export default function UserDetailPage() {
           </Button>
         </div>
       </div>
+
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+          <Card>
+            <CardContent className="p-4 flex items-center gap-3">
+              <MessageSquare size={18} className="text-muted-foreground shrink-0" />
+              <div>
+                <p className="text-xs text-muted-foreground">セッション数</p>
+                <p className="text-lg font-bold">{stats.totalSessions}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 flex items-center gap-3">
+              <BarChart2 size={18} className="text-muted-foreground shrink-0" />
+              <div>
+                <p className="text-xs text-muted-foreground">発話数</p>
+                <p className="text-lg font-bold">{stats.totalUtterances}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 flex items-center gap-3">
+              <Clock size={18} className="text-muted-foreground shrink-0" />
+              <div>
+                <p className="text-xs text-muted-foreground">最多利用時間</p>
+                <p className="text-lg font-bold">{stats.topHour !== null ? `${stats.topHour}時台` : '—'}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 flex items-center gap-3">
+              <Calendar size={18} className="text-muted-foreground shrink-0" />
+              <div>
+                <p className="text-xs text-muted-foreground">最多利用曜日</p>
+                <p className="text-lg font-bold">{stats.topDay !== null ? `${stats.topDay}曜日` : '—'}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {stats && stats.topKeywords.length > 0 && (
+        <Card className="mb-5">
+          <CardHeader className="pb-2"><CardTitle className="text-sm">よく話したトピック</CardTitle></CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {stats.topKeywords.map(kw => (
+                <span
+                  key={kw.keyword}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-muted text-foreground"
+                >
+                  {kw.keyword}
+                  <span className="text-muted-foreground">×{kw.count}</span>
+                </span>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         <div className="lg:col-span-3">

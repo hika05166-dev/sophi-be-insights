@@ -29,6 +29,7 @@ export interface Utterance {
 
 export interface UtteranceWithAttribute extends Utterance {
   attribute?: UserAttribute
+  matchedQueries?: string[]  // マッチした検索クエリ（元キーワード + 関連クエリ）
 }
 
 export interface SearchLog {
@@ -86,8 +87,19 @@ export interface ModeData {
   count: number
 }
 
+export interface CyclePhaseData {
+  cycle_phase: CyclePhase
+  count: number
+}
+
 export interface HeatmapCell {
   phase: CyclePhase
+  day: string
+  count: number
+}
+
+export interface HourlyHeatmapCell {
+  hour: number
   day: string
   count: number
 }
@@ -97,13 +109,29 @@ export interface MonthlyTrend {
   count: number
 }
 
+export interface CoOccurrenceItem {
+  keyword: string
+  count: number
+}
+
 export interface DashboardData {
   ageGroups: AgeGroupData[]
   modes: ModeData[]
+  cyclePhases: CyclePhaseData[]
   heatmap: HeatmapCell[]
+  hourlyHeatmap: HourlyHeatmapCell[]
   monthlyTrend: MonthlyTrend[]
+  coOccurrence: CoOccurrenceItem[]
   keyword: string
   totalCount: number
+}
+
+export interface UserStats {
+  totalSessions: number
+  totalUtterances: number
+  topHour: number | null
+  topDay: string | null
+  topKeywords: CoOccurrenceItem[]
 }
 
 // API レスポンス共通

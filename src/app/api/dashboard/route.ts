@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { getDb } from '@/lib/db/index'
 import { initSchema } from '@/lib/db/schema'
 import { seedDatabase } from '@/lib/db/seed'
-import type { AgeGroupData, ModeData, HeatmapCell, MonthlyTrend } from '@/types'
+import type { AgeGroupData, ModeData, CyclePhaseData, HeatmapCell, HourlyHeatmapCell, MonthlyTrend, CoOccurrenceItem } from '@/types'
 
 function ensureDb() {
   initSchema()
@@ -13,6 +13,16 @@ function ensureDb() {
 
 const CYCLE_PHASES = ['月経期', '卵胞期', '排卵期', '黄体期'] as const
 const WEEKDAYS = ['月', '火', '水', '木', '金', '土', '日'] as const
+const DAY_NUM_TO_JP: Record<number, string> = { 0: '日', 1: '月', 2: '火', 3: '水', 4: '木', 5: '金', 6: '土' }
+
+const CO_OCCUR_KEYWORDS = [
+  '生理痛', 'PMS', '生理不順', '睡眠', 'ストレス', '肌荒れ',
+  'ロキソニン', 'イブプロフェン', '低用量ピル', '子宮筋腫', '子宮内膜症',
+  '妊活', '排卵', '基礎体温', '排卵検査薬', '葉酸', '鉄分', '不妊治療',
+  '体外受精', '経血量', '月経困難症', '月経前症候群', 'ホルモン',
+  'サプリ', 'ヨガ', '漢方', '頭痛', '更年期', '鎮痛剤', '婦人科',
+  '運動', 'ピル', '不妊', '経血', '排卵痛', '低用量',
+]
 
 function getDayOfWeek(dateStr: string): string {
   const date = new Date(dateStr)
@@ -41,8 +51,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         ageGroups: [],
         modes: [],
+        cyclePhases: [],
         heatmap: [],
+        hourlyHeatmap: [],
         monthlyTrend: [],
+        coOccurrence: [],
         keyword: '',
         totalCount: 0,
       })
@@ -64,8 +77,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         ageGroups: [],
         modes: [],
+        cyclePhases: [],
         heatmap: [],
+        hourlyHeatmap: [],
         monthlyTrend: [],
+        coOccurrence: [],
         keyword,
         totalCount: 0,
       })
@@ -82,6 +98,11 @@ export async function GET(request: NextRequest) {
     const modeRows = db.prepare(
       `SELECT mode, COUNT(*) as count FROM users WHERE id IN (${placeholders}) GROUP BY mode`
     ).all(...userIds) as ModeData[]
+
+    // 周期フェーズ別集計
+    const cyclePhaseRows = db.prepare(
+      `SELECT cycle_phase, COUNT(*) as count FROM users WHERE id IN (${placeholders}) GROUP BY cycle_phase`
+    ).all(...userIds) as CyclePhaseData[]
 
     // ヒートマップ: 生理周期フェーズ × 曜日
     const heatmapData: HeatmapCell[] = []
@@ -116,6 +137,41 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // 時間帯別ヒートマップ (時間 × 曜日)
+    const hourlyRaw = db.prepare(
+      `SELECT
+        CAST(substr(created_at, 12, 2) AS INTEGER) as hour,
+        CAST(strftime('%w', created_at) AS INTEGER) as day_num,
+        COUNT(*) as count
+       FROM utterances
+       WHERE role = 'user' AND content LIKE ?
+       GROUP BY hour, day_num`
+    ).all(`%${keyword}%`) as { hour: number; day_num: number; count: number }[]
+
+    const hourlyHeatmap: HourlyHeatmapCell[] = hourlyRaw.map(r => ({
+      hour: r.hour,
+      day: DAY_NUM_TO_JP[r.day_num] ?? '不明',
+      count: r.count,
+    }))
+
+    // 共起キーワード分析
+    const coOccurContents = db.prepare(
+      `SELECT content FROM utterances WHERE role = 'user' AND content LIKE ?`
+    ).all(`%${keyword}%`) as { content: string }[]
+
+    const coOccurCounts: Record<string, number> = {}
+    for (const { content } of coOccurContents) {
+      for (const kw of CO_OCCUR_KEYWORDS) {
+        if (kw !== keyword && content.includes(kw)) {
+          coOccurCounts[kw] = (coOccurCounts[kw] || 0) + 1
+        }
+      }
+    }
+    const coOccurrence: CoOccurrenceItem[] = Object.entries(coOccurCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([kw, count]) => ({ keyword: kw, count }))
+
     // 月別トレンド
     const monthlyRows = db.prepare(
       `SELECT substr(created_at, 1, 7) as month, COUNT(*) as count
@@ -129,8 +185,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       ageGroups: ageGroupRows,
       modes: modeRows,
+      cyclePhases: cyclePhaseRows,
       heatmap: heatmapData,
+      hourlyHeatmap,
       monthlyTrend: monthlyRows,
+      coOccurrence,
       keyword,
       totalCount,
     })
