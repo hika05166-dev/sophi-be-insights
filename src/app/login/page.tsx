@@ -10,7 +10,13 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f5f5f3]">
+    <div
+      className="min-h-screen flex items-center justify-center bg-[#f5f5f3]"
+      style={{
+        backgroundImage: 'radial-gradient(circle, #c8c8c4 1px, transparent 1px)',
+        backgroundSize: '24px 24px',
+      }}
+    >
       <div className="w-full max-w-sm px-6">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 bg-neutral-900">

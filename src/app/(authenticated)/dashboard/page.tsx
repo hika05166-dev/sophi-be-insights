@@ -230,8 +230,12 @@ function DashboardContent() {
                     {data.coOccurrence.length > 0 ? (
                       <div className="space-y-2">
                         {data.coOccurrence.map(item => (
-                          <div key={item.keyword} className="flex items-center gap-3">
-                            <span className="text-sm text-foreground w-28 shrink-0">{item.keyword}</span>
+                          <button
+                            key={item.keyword}
+                            onClick={() => router.push(`/dashboard?q=${encodeURIComponent(item.keyword)}`)}
+                            className="flex items-center gap-3 w-full group hover:bg-muted/50 rounded-lg px-2 py-1 -mx-2 transition-colors"
+                          >
+                            <span className="text-sm text-foreground w-28 shrink-0 text-left group-hover:text-primary group-hover:underline transition-colors">{item.keyword}</span>
                             <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
                               <div
                                 className="h-2 rounded-full bg-primary transition-all"
@@ -239,7 +243,7 @@ function DashboardContent() {
                               />
                             </div>
                             <span className="text-xs text-muted-foreground w-8 text-right">{item.count}</span>
-                          </div>
+                          </button>
                         ))}
                       </div>
                     ) : (
