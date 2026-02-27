@@ -10,22 +10,19 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center"
-      style={{ background: 'linear-gradient(135deg, #fff0f5 0%, #f5f0ff 100%)' }}>
-      <div className="w-full max-w-md px-6">
-        {/* ロゴ */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
-            style={{ background: 'linear-gradient(135deg, #ff6b9d, #c084fc)' }}>
-            <span className="text-white text-2xl font-bold">び</span>
+    <div className="min-h-screen flex items-center justify-center bg-[#f5f5f3]">
+      <div className="w-full max-w-sm px-6">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 bg-neutral-900">
+            <span className="text-white text-lg font-bold">び</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">ソフィBe インサイトツール</h1>
-          <p className="text-sm text-gray-500 mt-1">びいのユーザー発話を検索・分析する社内ツール</p>
+          <h1 className="text-xl font-semibold text-neutral-900">ソフィBe インサイトツール</h1>
+          <p className="text-sm text-neutral-500 mt-1">びいのユーザー発話を検索・分析する社内ツール</p>
         </div>
 
         <LoginForm />
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-neutral-400 mt-6">
           社内利用限定のツールです。ログイン情報の共有はご遠慮ください。
         </p>
       </div>

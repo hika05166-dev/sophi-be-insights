@@ -36,16 +36,16 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-pink-100 p-8">
-      <form onSubmit={handleSubmit} className="space-y-5">
+    <div className="bg-white rounded-2xl border border-neutral-200 p-8">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600 animate-fade-in">
+          <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-600 animate-fade-in">
             {error}
           </div>
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label className="block text-sm font-medium text-neutral-700 mb-1.5">
             メールアドレス
           </label>
           <input
@@ -54,12 +54,12 @@ export default function LoginForm() {
             onChange={e => setEmail(e.target.value)}
             placeholder="test@example.com"
             required
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all"
+            className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label className="block text-sm font-medium text-neutral-700 mb-1.5">
             パスワード
           </label>
           <div className="relative">
@@ -69,12 +69,12 @@ export default function LoginForm() {
               onChange={e => setPassword(e.target.value)}
               placeholder="password123"
               required
-              className="w-full px-4 py-3 pr-10 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all"
+              className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
@@ -84,22 +84,21 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={isLoading || !email || !password}
-          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium text-white text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ background: 'linear-gradient(135deg, #ff6b9d, #c084fc)' }}
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-white text-sm bg-neutral-900 hover:bg-neutral-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed mt-2"
         >
           {isLoading ? (
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
           ) : (
             <>
-              <LogIn size={16} />
+              <LogIn size={15} />
               ログイン
             </>
           )}
         </button>
       </form>
 
-      <div className="mt-5 pt-5 border-t border-gray-100">
-        <p className="text-xs text-gray-400 text-center">
+      <div className="mt-5 pt-5 border-t border-neutral-100">
+        <p className="text-xs text-neutral-400 text-center">
           テストアカウント：test@example.com / password123
         </p>
       </div>
