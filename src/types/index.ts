@@ -29,6 +29,7 @@ export interface Utterance {
 
 export interface UtteranceWithAttribute extends Utterance {
   attribute?: UserAttribute
+  matchedQueries?: string[]  // マッチした検索クエリ（元キーワード + 関連クエリ）
 }
 
 export interface SearchLog {
