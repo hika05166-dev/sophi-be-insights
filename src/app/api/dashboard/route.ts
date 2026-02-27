@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     if (!keyword.trim()) {
       return NextResponse.json({
         ageGroups: [], modes: [], cyclePhases: [], heatmap: [], hourlyHeatmap: [],
-        monthlyTrend: [], coOccurrence: [], agePhaseMatrix: [], modePhaseMatrix: [],
+        monthlyTrend: [], coOccurrence: [], agePhaseMatrix: [], modePhaseMatrix: [], ageModeMatrix: [],
         keyword: '', totalCount: 0,
       })
     }
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     if (userIds.length === 0) {
       return NextResponse.json({
         ageGroups: [], modes: [], cyclePhases: [], heatmap: [], hourlyHeatmap: [],
-        monthlyTrend: [], coOccurrence: [], agePhaseMatrix: [], modePhaseMatrix: [],
+        monthlyTrend: [], coOccurrence: [], agePhaseMatrix: [], modePhaseMatrix: [], ageModeMatrix: [],
         keyword, totalCount: 0,
       })
     }
@@ -143,6 +143,15 @@ export async function GET(request: NextRequest) {
        GROUP BY u.mode, u.cycle_phase`
     ).all(`%${keyword}%`) as CrossTabCell[]
 
+    // 年代 × モード クロス集計
+    const ageModeRaw = db.prepare(
+      `SELECT u.age_group as row, u.mode as col, COUNT(*) as count
+       FROM utterances ut
+       JOIN users u ON ut.user_id = u.id
+       WHERE ut.role = 'user' AND ut.content LIKE ?
+       GROUP BY u.age_group, u.mode`
+    ).all(`%${keyword}%`) as CrossTabCell[]
+
     // 時間帯別ヒートマップ (時間 × 曜日)
     const hourlyRaw = db.prepare(
       `SELECT
@@ -198,6 +207,7 @@ export async function GET(request: NextRequest) {
       coOccurrence,
       agePhaseMatrix: agePhaseRaw,
       modePhaseMatrix: modePhaseRaw,
+      ageModeMatrix: ageModeRaw,
       keyword,
       totalCount,
     })

@@ -130,6 +130,7 @@ export interface DashboardData {
   coOccurrence: CoOccurrenceItem[]
   agePhaseMatrix: CrossTabCell[]
   modePhaseMatrix: CrossTabCell[]
+  ageModeMatrix: CrossTabCell[]
   keyword: string
   totalCount: number
 }

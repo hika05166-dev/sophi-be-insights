@@ -12,7 +12,34 @@ import TrendLineChart from '@/components/charts/TrendLineChart'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { DashboardData } from '@/types'
+import type { DashboardData, CrossTabCell } from '@/types'
+
+type AxisKey = '年代' | 'モード' | '生理周期'
+const AXES: AxisKey[] = ['年代', 'モード', '生理周期']
+const AXIS_VALUES: Record<AxisKey, string[]> = {
+  '年代': ['10代', '20代', '30代', '40代〜'],
+  'モード': ['生理管理', '妊活'],
+  '生理周期': ['月経期', '卵胞期', '排卵期', '黄体期'],
+}
+
+function getCrossTabData(
+  rowAxis: AxisKey,
+  colAxis: AxisKey,
+  data: DashboardData,
+): CrossTabCell[] {
+  const key = [rowAxis, colAxis].sort().join('×') as string
+  let matrix: CrossTabCell[]
+  if (key === '年代×生理周期') matrix = data.agePhaseMatrix
+  else if (key === 'モード×生理周期') matrix = data.modePhaseMatrix
+  else matrix = data.ageModeMatrix
+
+  // rowAxisが「大きい方」の軸でない場合はrow/colを入れ替える
+  const canonical = [rowAxis, colAxis].sort()
+  if (canonical[0] !== rowAxis) {
+    return matrix.map(d => ({ row: d.col, col: d.row, count: d.count }))
+  }
+  return matrix
+}
 
 function DashboardContent() {
   const searchParams = useSearchParams()
@@ -20,6 +47,8 @@ function DashboardContent() {
   const keyword = searchParams.get('q') || ''
   const [data, setData] = useState<DashboardData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [rowAxis, setRowAxis] = useState<AxisKey>('年代')
+  const [colAxis, setColAxis] = useState<AxisKey>('生理周期')
 
   useEffect(() => {
     if (!keyword) return
@@ -80,34 +109,47 @@ function DashboardContent() {
             </div>
           ) : (
             <>
-              {/* クロス集計: 年代 × 周期フェーズ */}
+              {/* クロス集計: 軸選択式 */}
               <Card>
                 <CardHeader>
-                  <CardTitle>年代 × 周期フェーズ クロス集計</CardTitle>
-                  <CardDescription>「{keyword}」に関する発話数を年代・周期フェーズの組み合わせで集計</CardDescription>
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
+                    <div>
+                      <CardTitle>クロス集計</CardTitle>
+                      <CardDescription>「{keyword}」に関する発話数を2軸で集計</CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm shrink-0">
+                      <select
+                        className="border rounded px-2 py-1 text-sm bg-background text-foreground"
+                        value={rowAxis}
+                        onChange={e => {
+                          const v = e.target.value as AxisKey
+                          if (v === colAxis) setColAxis(AXES.find(a => a !== v)!)
+                          setRowAxis(v)
+                        }}
+                      >
+                        {AXES.map(a => <option key={a} value={a}>{a}</option>)}
+                      </select>
+                      <span className="text-muted-foreground font-medium">×</span>
+                      <select
+                        className="border rounded px-2 py-1 text-sm bg-background text-foreground"
+                        value={colAxis}
+                        onChange={e => {
+                          const v = e.target.value as AxisKey
+                          if (v === rowAxis) setRowAxis(AXES.find(a => a !== v)!)
+                          setColAxis(v)
+                        }}
+                      >
+                        {AXES.map(a => <option key={a} value={a}>{a}</option>)}
+                      </select>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <CrossTabHeatmap
-                    data={data.agePhaseMatrix}
-                    rows={['10代', '20代', '30代', '40代〜']}
-                    cols={['月経期', '卵胞期', '排卵期', '黄体期']}
+                    data={getCrossTabData(rowAxis, colAxis, data)}
+                    rows={AXIS_VALUES[rowAxis]}
+                    cols={AXIS_VALUES[colAxis]}
                     color="#18181b"
-                  />
-                </CardContent>
-              </Card>
-
-              {/* クロス集計: モード × 周期フェーズ */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>モード × 周期フェーズ クロス集計</CardTitle>
-                  <CardDescription>「{keyword}」に関する発話数をモード・周期フェーズの組み合わせで集計</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <CrossTabHeatmap
-                    data={data.modePhaseMatrix}
-                    rows={['生理管理', '妊活']}
-                    cols={['月経期', '卵胞期', '排卵期', '黄体期']}
-                    color="#7c3aed"
                   />
                 </CardContent>
               </Card>
